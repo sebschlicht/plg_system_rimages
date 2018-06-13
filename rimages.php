@@ -136,29 +136,16 @@ class PlgSystemRimages extends JPlugin
         // loop detected images
         foreach ($matches as $match)
         {
-            // check if image source path or URL
-            $src = $match[1];
-            $regexUrl = '/^https?:/i';
-            if ( preg_match( $regexUrl, $src ) === 0 )
-            {
-                $path = pathinfo( $src );
-                $directory = $path['dirname'];
-                $filename = $path['filename'];
-            }
-            else
-            {
-                // TODO convert URL to path if pointing at this site
-                // TODO? option to convert and store external images in a local folder
-            }
+            // extract path information from image source
+            $localBasePath = $this->extractPathInfo( $match[1] );
 
             // loop configured max-widths
             $imageVersions = [];
             foreach ($configuration as $widthName)
             {
-                // responsive version is like the original one but suffixed with the target width
+                // build path to respective responsive version
+                $srcResponsive = $this->buildFilePath( $localBasePath, $widthName );
                 $width = $this->translateWidthName( $widthName );
-                $srcResponsive = $this->buildFilePath( $directory, "{$filename}_$widthName.jpg" );
-                // TODO support other image formats
 
                 // generate the file if not available
                 if (!is_file( $srcResponsive ))
@@ -169,24 +156,54 @@ class PlgSystemRimages extends JPlugin
                 array_push( $imageVersions, "<source media='(max-width: $width" . "px)' srcset='$srcResponsive' data-rimages-w='$widthName'>" );
             }
             
-            // add original version
-            array_push( $imageVersions, $match[0] );
-            
-            // create and inject a picture tag with all versions
-            $pictureTag = '<picture>' . implode( '', $imageVersions ) . '</picture';
-            $html = preg_replace( $regexImages, $pictureTag, $html, 1 );
+            if ($imageVersions)
+            {
+                // add original version
+                array_push( $imageVersions, $match[0] );
+                            
+                // create and inject a picture tag with all versions
+                $pictureTag = '<picture>' . implode( '', $imageVersions ) . '</picture';
+                $html = preg_replace( $regexImages, $pictureTag, $html, 1 );
+            }
         }
         return $html;
     }
 
-    private function buildFilePath( $directory, $basename )
+    private function extractPathInfo( $imgSrc )
+    {
+        // check if image source path or URL
+        if ( preg_match( '/^https?:/i', $imgSrc ) === 0 )
+        {
+            $path = pathinfo( $imgSrc );
+            $directory = $path['dirname'];
+            $filename = $path['filename'];
+            $isExternalUrl = false;
+        }
+        else
+        {
+            // TODO convert URL to path if pointing at this site
+            $directory = null;
+            $filename = null;
+            $isExternalUrl = true;
+            // TODO? option to convert and store external images in a local folder
+        }
+        return [
+            'directory' => $directory,
+            'filename' => $filename,
+            'isExternalUrl' => $isExternalUrl,
+        ];
+    }
+
+    private function buildFilePath( $localBasePath, $widthTitle )
     {
         // if directory empty or a path: prefix with Joomla! site directory
-        if (!$directory || substr( $directory, 0, 4 ) !== 'http')
+        if (!$localBasePath['isExternalUrl'])
         {
-            $directory = JUri::base( true ) . DIRECTORY_SEPARATOR . $directory;
+            $localBasePath['directory'] = JUri::base( true ) . DIRECTORY_SEPARATOR . $localBasePath['directory'];
         }
-        return $directory . DIRECTORY_SEPARATOR . $basename;
+
+        // TODO support other image formats
+        return $localBasePath['directory'] . DIRECTORY_SEPARATOR . $localBasePath['filename'] . "_$widthTitle.jpg";
     }
 
     private function translateWidthName( $widthName )
