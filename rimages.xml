@@ -1,0 +1,37 @@
+<extension version="3.2" type="plugin" group="system" method="upgrade">
+
+    <name>PLG_SYSTEM_RIMAGES</name>
+
+    <author>Sebastian Schlicht</author>
+    <creationDate>Jun 2018</creationDate>
+    <copyright>Copyright (C) 2018 Sebastian Schlicht. All rights reserved.</copyright>
+    <license>MIT License; see LICENSE</license>
+    <authorEmail>sebastian@jablab.de</authorEmail>
+    <authorUrl>http://www.jablab.de</authorUrl>
+  
+    <updateservers>
+        <server type="extension" name="Responsive Images Plugin Updates">http://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
+    </updateservers>
+
+    <version>0.0.1</version>
+
+    <description>PLG_SYSTEM_RIMAGES_XML_DESCRIPTION</description>
+
+    <files>
+        <filename plugin="rimages">rimages.php</filename>
+        <filename>index.html</filename>
+
+        <folder>language</folder>
+    </files>
+
+    <languages folder="language">
+        <language tag="en-GB">en-GB/en-GB.plg_system_rimages.ini</language>
+        <language tag="en-GB">en-GB/en-GB.plg_system_rimages.sys.ini</language>
+        <language tag="de-DE">de-DE/de-DE.plg_system_rimages.ini</language>
+        <language tag="de-DE">de-DE/de-DE.plg_system_rimages.sys.ini</language>
+    </languages>
+
+    <config>
+        <fields name="params" />
+    </config>
+</extension>
