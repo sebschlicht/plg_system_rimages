@@ -79,8 +79,8 @@ class PlgSystemRimages extends JPlugin
         }
 
         // configuration: content || global
-        $configuration = $this->loadPluginConfig( self::CFG_CONTENT );
-        if (!$configuration) $configuration = $this->loadPluginConfig( self::CFG_GLOBAL );
+        $configuration = $this->loadConfiguredBreakpoints( self::CFG_CONTENT );
+        if (!$configuration) $configuration = $this->loadConfiguredBreakpoints( self::CFG_GLOBAL );
 
         // (generate and) inject responsive images
         $row->text = $this->processHtml( $row->text, $configuration );
@@ -100,9 +100,9 @@ class PlgSystemRimages extends JPlugin
         if ($app->isSite())
         {
             // configuration: module || module position || global
-            $configuration = $this->loadPluginConfig( self::CFG_MODULE, $module->id );
-            if (!$configuration) $configuration = $this->loadPluginConfig( self::CFG_MODULE_POSITION, $module->position );
-            if (!$configuration) $configuration = $this->loadPluginConfig( self::CFG_GLOBAL );
+            $configuration = $this->loadConfiguredBreakpoints( self::CFG_MODULE, $module->id );
+            if (!$configuration) $configuration = $this->loadConfiguredBreakpoints( self::CFG_MODULE_POSITION, $module->position );
+            if (!$configuration) $configuration = $this->loadConfiguredBreakpoints( self::CFG_GLOBAL );
 
             $module->content = $this->processHtml( $module->content, $configuration );
         }
@@ -117,7 +117,7 @@ class PlgSystemRimages extends JPlugin
         if ($app->isSite())
         {
             // configuration: global
-            $configuration = $this->loadPluginConfig( self::CFG_GLOBAL );
+            $configuration = $this->loadConfiguredBreakpoints( self::CFG_GLOBAL );
             JResponse::setBody( $this->processHtml( JResponse::getBody(), $configuration ) );
         }
     }
@@ -251,55 +251,48 @@ class PlgSystemRimages extends JPlugin
         }
     }
 
-    private function loadPluginConfig( $section, $identifier = null )
+    /**
+     * Loads the breakpoints from a section or subsection of the plugin configuration.
+     * 
+     * @param string $section name of the configuration section
+     * @param string $subsection (optional) name of a subsection of the specified section
+     * @return array the specified breakpoints from the plugin configuration or null if a subsection has been specified but is missing
+     */
+    private function loadConfiguredBreakpoints( $section, $subsection = null )
     {
         // parse configuration once per request
         if ( !$this->config )
         {
             $this->config = [
-                self::CFG_MODULE => $this->loadModuleConfig(),
-                self::CFG_MODULE_POSITION => $this->loadModulePosConfig(),
+                self::CFG_MODULE => $this->loadFlatItems( 'module-id', 'module-breakpoints' ),
+                self::CFG_MODULE_POSITION => $this->loadFlatItems( 'modpos-position', 'modpos-breakpoints' ),
                 self::CFG_CONTENT => $this->loadSubformItems( 'content-items' ),
                 self::CFG_GLOBAL => $this->loadSubformItems( 'global-items' ),
             ];
         }
 
-        // retrieve section or one of its subsections, if subsection identifier specified
-        if (!$identifier) return $this->config[$section];
-        else return array_key_exists( $identifier, $this->config[$section] ) ? $this->config[$section][$identifier] : false;
+        // retrieve section or subsection if specified and existing
+        if (!$subsection) return $this->config[$section];
+        else return array_key_exists( $subsection, $this->config[$section] ) ? $this->config[$section][$subsection] : false;
     }
 
-    private function loadModuleConfig()
+    private function loadFlatItems( $keyId, $keyBreakpoints )
     {
-        $moduleCfg = [];
+        // search for items as long as items available
+        $items = [];
         for ($i = 1; $i === 1 || $id && $breakpoints; $i++)
         {
-            $id = $this->params->get( "module-id$i", false );
-            $breakpoints = $this->params->get( "module-breakpoints$i", false );
-            
+            // try to retrieve item with current index
+            $id = $this->params->get( "$keyId$i", false );
+            $breakpoints = $this->params->get( "$keyBreakpoints$i", false );
+
+            // add item if available
             if ($id && $breakpoints)
             {
-                $moduleCfg[$id] = array_values( (array) $breakpoints );
-            }
-            else break;
-        }
-        return $moduleCfg;
-    }
-
-    private function loadModulePosConfig()
-    {
-        $modulePosCfg = [];
-        for ($i = 1; $i === 1 || $position && $breakpoints; $i++)
-        {
-            $position = $this->params->get( "modpos-position$i", false );
-            $breakpoints = $this->params->get( "modpos-breakpoints$i", false );
-            
-            if ($position && $breakpoints)
-            {
-                $modulePosCfg[$position] = array_values( (array) $breakpoints );
+                $items[$key] = array_values( (array) $breakpoints );
             }
         }
-        return $modulePosCfg;
+        return $items;
     }
 
     private function loadSubformItems( $name )
@@ -307,6 +300,7 @@ class PlgSystemRimages extends JPlugin
         $items = $this->params->get( $name, false );
         if ($items) 
         {
+            // transform object with sub-objects to a plain array
             $castToArray = function( $o ) { return (array) $o; };
             $items = array_map( $castToArray, array_values( (array) $items ) );
         }
