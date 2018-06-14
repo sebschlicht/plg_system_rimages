@@ -135,12 +135,13 @@ class PlgSystemRimages extends JPlugin
                 $viewportWidthValue = $this->translateWidthName( $viewportWidth );
 
                 // build path to respective responsive version
-                $srcResponsive = $this->buildFilePath( $localBasePath, $viewportWidth );
+                $srcResponsive = $this->buildFilePath( $localBasePath['directory'], $localBasePath['filename'], $viewportWidthValue );
 
                 // generate the file if not available
                 if (!is_file( $srcResponsive ))
                 {
                     // TODO not implemented
+                    continue;
                 }
 
                 // build and add source tag
@@ -187,11 +188,22 @@ class PlgSystemRimages extends JPlugin
         }
         else
         {
-            // TODO convert URL to path if pointing at this site
-            $directory = null;
-            $filename = null;
-            $isExternalUrl = true;
-            // TODO? option to convert and store external images in a local folder
+            $url = parse_url( $imgSrc );
+            $isExternalUrl = ($url['host'] !== $_SERVER['HTTP_HOST']);
+
+            if (!$isExternalUrl)
+            {
+                // convert URL to local path
+                $path = pathinfo( $url['path'] );
+                $directory = substr( $path['dirname'], strlen( JUri::base( true ) ) + 1 );
+                $filename = $path['filename'];
+            }
+            else
+            {
+                // TODO? option to convert and store external images in a local folder
+                $directory = null;
+                $filename = null;
+            }
         }
         return [
             'directory' => $directory,
@@ -200,16 +212,10 @@ class PlgSystemRimages extends JPlugin
         ];
     }
 
-    private function buildFilePath( $localBasePath, $widthTitle )
+    private function buildFilePath( $directory, $filename, $widthTitle )
     {
-        // if directory empty or a path: prefix with Joomla! site directory
-        if (!$localBasePath['isExternalUrl'])
-        {
-            $localBasePath['directory'] = JUri::base( true ) . DIRECTORY_SEPARATOR . $localBasePath['directory'];
-        }
-
         // TODO support other image formats
-        return $localBasePath['directory'] . DIRECTORY_SEPARATOR . $localBasePath['filename'] . "_$widthTitle.jpg";
+        return $directory . DIRECTORY_SEPARATOR . $filename . "_$widthTitle.jpg";
     }
 
     private function translateWidthName( $widthName )
