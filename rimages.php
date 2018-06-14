@@ -179,7 +179,7 @@ class PlgSystemRimages extends JPlugin
                 array_push( $imageVersions, $match[0] );
                             
                 // create and inject a picture tag with all versions
-                $pictureTag = '<picture>' . implode( '', $imageVersions ) . '</picture';
+                $pictureTag = '<picture>' . implode( '', $imageVersions ) . '</picture>';
                 $html = preg_replace( $regexImages, $pictureTag, $html, 1 );
             }
         }
@@ -198,7 +198,7 @@ class PlgSystemRimages extends JPlugin
 
     private function extractPathInfo( $imgSrc )
     {
-        // check if image source path or URL
+        // check if image source is path or URL
         if ( preg_match( '/^https?:/i', $imgSrc ) === 0 )
         {
             $path = pathinfo( $imgSrc );
@@ -232,10 +232,10 @@ class PlgSystemRimages extends JPlugin
         ];
     }
 
-    private function buildFilePath( $directory, $filename, $widthTitle )
+    private function buildFilePath( $directory, $filename, $width )
     {
         // TODO support other image formats
-        return $directory . DIRECTORY_SEPARATOR . $filename . "_$widthTitle.jpg";
+        return $directory . DIRECTORY_SEPARATOR . $filename . "_$width.jpg";
     }
 
     private function getWidthValue( $widthName, $border )
@@ -264,10 +264,10 @@ class PlgSystemRimages extends JPlugin
         if ( !$this->config )
         {
             $this->config = [
-                self::CFG_MODULE => $this->loadFlatItems( 'module-id', 'module-breakpoints' ),
-                self::CFG_MODULE_POSITION => $this->loadFlatItems( 'modpos-position', 'modpos-breakpoints' ),
-                self::CFG_CONTENT => $this->loadSubformItems( 'content-items' ),
-                self::CFG_GLOBAL => $this->loadSubformItems( 'global-items' ),
+                self::CFG_MODULE => $this->loadFlatBreakpoints( 'module-id', 'module-breakpoints' ),
+                self::CFG_MODULE_POSITION => $this->loadFlatBreakpoints( 'modpos-position', 'modpos-breakpoints' ),
+                self::CFG_CONTENT => $this->loadSubformBreakpoints( 'content-items' ),
+                self::CFG_GLOBAL => $this->loadSubformBreakpoints( 'global-items' ),
             ];
         }
 
@@ -276,34 +276,48 @@ class PlgSystemRimages extends JPlugin
         else return array_key_exists( $subsection, $this->config[$section] ) ? $this->config[$section][$subsection] : false;
     }
 
-    private function loadFlatItems( $keyId, $keyBreakpoints )
+    /**
+     * Loads breakpoints from the plugin configuration that are stored in a flat manner, having a single identifier field.
+     * Both field names are expected to be suffixed by increasing numbers, starting at 1.
+     * 
+     * @param string $fieldnameId name of the identifier field
+     * @param string $fieldnameBreakpoints name of the breakpoint list field
+     * @return array breakpoints grouped by seen identifiers
+     */
+    private function loadFlatBreakpoints( $fieldnameId, $fieldnameBreakpoints )
     {
-        // search for items as long as items available
-        $items = [];
+        // search for tuples of id and breakpoints as long as such tuples are available
+        $result = [];
         for ($i = 1; $i === 1 || $id && $breakpoints; $i++)
         {
-            // try to retrieve item with current index
-            $id = $this->params->get( "$keyId$i", false );
-            $breakpoints = $this->params->get( "$keyBreakpoints$i", false );
+            // try to retrieve tuple with current index
+            $id = $this->params->get( "$fieldnameId$i", false );
+            $breakpoints = $this->params->get( "$fieldnameBreakpoints$i", false );
 
-            // add item if available
+            // add breakpoints as plain array
             if ($id && $breakpoints)
             {
-                $items[$key] = array_values( (array) $breakpoints );
+                $result[$key] = array_values( (array) $breakpoints );
             }
         }
-        return $items;
+        return $result;
     }
 
-    private function loadSubformItems( $name )
+    /**
+     * Loads breakpoints from the plugin configuration that are stored in a (multiple) subform field.
+     * 
+     * @param string $name name of the subform field
+     * @return array breakpoints represented by the subform items
+     */
+    private function loadSubformBreakpoints( $name )
     {
-        $items = $this->params->get( $name, false );
-        if ($items) 
+        $result = $this->params->get( $name, false );
+        if ($result)
         {
             // transform object with sub-objects to a plain array
             $castToArray = function( $o ) { return (array) $o; };
-            $items = array_map( $castToArray, array_values( (array) $items ) );
+            $result = array_map( $castToArray, array_values( (array) $result ) );
         }
-        return $items ? $items : [];
+        return $result ? $result : [];
     }
 }
