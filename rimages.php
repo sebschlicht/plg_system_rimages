@@ -33,6 +33,26 @@ class PlgSystemRimages extends JPlugin
     private $config;
 
     /**
+     * pre-defined upper breakpoints (max-width)
+     */
+    private static $MAX_WIDTHS = [
+        // Bootstrap breakpoints
+        'xs' => 767,
+        'sm' => 991,
+        'md' => 1199,
+    ];
+
+    /**
+     * pre-defined lower breakpoints (min-width)
+     */
+    private static $MIN_WIDTHS = [
+        // Bootstrap breakpoints
+        'sm' => 768,
+        'md' => 992,
+        'ld' => 1200,
+    ];
+
+    /**
      * Load the language file on instantiation. Note this is only available in Joomla 3.1 and higher.
      * If you want to support 3.0 series you must override the constructor
      *
@@ -132,7 +152,7 @@ class PlgSystemRimages extends JPlugin
             {
                 // load targeted viewport width
                 $viewportWidth = $breakpoint[$breakpoint['type'] === '0' ? 'custom' : 'type'];
-                $viewportWidthValue = $this->translateWidthName( $viewportWidth );
+                $viewportWidthValue = $this->getWidthValue( $viewportWidth, $breakpoint['border'] );
 
                 // build path to respective responsive version
                 $srcResponsive = $this->buildFilePath( $localBasePath['directory'], $localBasePath['filename'], $viewportWidthValue );
@@ -218,18 +238,22 @@ class PlgSystemRimages extends JPlugin
         return $directory . DIRECTORY_SEPARATOR . $filename . "_$widthTitle.jpg";
     }
 
-    private function translateWidthName( $widthName )
+    private function getWidthValue( $widthName, $border )
     {
-        $widths = [
-            'xs' => '767',
-            'sm' => '991',
-            'md' => '1199',
-        ];
-        return array_key_exists( $widthName, $widths ) ? $widths[$widthName] : $widthName;
+        if (filter_var( $widthName, FILTER_VALIDATE_INT ) === false)
+        {
+            $widths = ($border === 'max') ? self::$MAX_WIDTHS : self::$MIN_WIDTHS;
+            return array_key_exists( $widthName, $widths ) ? $widths[$widthName] : null;
+        }
+        else
+        {
+            return $widthName;
+        }
     }
 
     private function loadPluginConfig( $section, $identifier = null )
     {
+        // parse configuration once per request
         if ( !$this->config )
         {
             $this->config = [
@@ -238,9 +262,9 @@ class PlgSystemRimages extends JPlugin
                 self::CFG_CONTENT => $this->loadSubformItems( 'content-items' ),
                 self::CFG_GLOBAL => $this->loadSubformItems( 'global-items' ),
             ];
-            //echo json_encode( $this->config ), '<br>';
         }
 
+        // retrieve section or one of its subsections, if subsection identifier specified
         if (!$identifier) return $this->config[$section];
         else return array_key_exists( $identifier, $this->config[$section] ) ? $this->config[$section][$identifier] : false;
     }
