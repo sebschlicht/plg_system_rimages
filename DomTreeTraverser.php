@@ -10,17 +10,41 @@ class DomTreeTraverser {
 
     private $classes;
 
-    private $parseSelector;
-
-    public function __construct()
+    private static function parseSelector( $selector )
     {
-        $this->parseSelector = function( $selector ) { return preg_split( '/(?=[.#])/', $selector, 0, PREG_SPLIT_NO_EMPTY ); };
+        // split selector string into single selectors
+        $selectors = explode( ',', $selector );
+        // process single selectors to extract parts
+        return array_map( 'DomTreeTraverser::_parseSingleSelector', $selectors );
     }
 
-    private function parseSelector( $selector )
+    private static function _parseSingleSelector( &$selector )
     {
-        $selectors = explode( ',', $selector );
-        return array_map( $this->parseSelector, $selectors );
+        // reverse parts to have final target at position zero
+        $parts = array_reverse( explode( ' ', $selector ) );
+        // process parts to extract atoms
+        return array_map( 'DomTreeTraverser::_parsePart', $parts );
+    }
+
+    private static function _parsePart( &$part )
+    {
+        $atoms = preg_split( '/(?=[.#])/', $part, 0, PREG_SPLIT_NO_EMPTY );
+        $result = [
+            'id' => false,
+            'classes' => false,
+            'tag' => false,
+        ];
+        foreach($atoms as $atom)
+        {
+            if (substr( $atom, 0, 1 ) === '#') $result['id'] = substr( $atom, 1 );
+            if (substr( $atom, 0, 1 ) === '.')
+            {
+                if ($result['classes'] === false) $result['classes'] = [];
+                array_push( $result['classes'], substr( $atom, 1 ) );
+            }
+            else $result['tag'] = $atom;
+        }
+        return $result;
     }
 
     public function loadHtml( $html )
@@ -32,56 +56,24 @@ class DomTreeTraverser {
         $this->dom->loadHtml( $html );
 
         $this->level = 0;
-        $this->classes = [];
-        $this->node = $this->dom->documentElement;
+        $this->node = null;
     }
 
     public function findNext( $selector )
     {
-        $selectors = $this->parseSelector( $selector );
+        $selectors = self::parseSelector( $selector );
+
         do {
             if ($this->nextNode()) $this->loadNode();
-        } while (!$this->is( $selectors ));
-    }
+        } while ($this->node && !$this->is( $selectors ));
 
-    public function is( $selector )
-    {
-        $selectors = is_array( $selector ) ? $selector : $this->parseSelector( $selector );
-        foreach ($selectors as $s)
-        {
-            foreach ($s as $part)
-            {
-                if (substr( $part, 0, 1 ) === '#')
-                {
-                    // TODO
-                }
-                elseif (substr( $part, 0, 1 ) === '.')
-                {
-                    if ($this->hasClass( substr( $part, 1 ) )) return true;
-                }
-                else
-                {
-                    if ($this->node->nodeName === $part) return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private function loadNode()
-    {
-        // load CSS classes
-        if ($this->node->hasAttribute( 'class' ))
-        {
-            foreach (explode( ' ', $this->node->getAttribute( 'class' ) ) as $class)
-            {
-                if (!array_key_exists( $class, $this->classes )) $this->classes[$class] = $this->level;
-            }
-        }
+        return $this->node;
     }
 
     private function nextNode( $allowDeeper = true )
     {
+        if ($this->node === null) return $this->node = $this->dom->documentElement;
+
         $node = $this->node;
         $level = $this->level;
         $traversingUp = false;
@@ -131,13 +123,68 @@ class DomTreeTraverser {
         return $node;
     }
 
-    public function inClass( $class )
+    public function find( $selector )
     {
-        return array_key_exists( $class, $this->classes ) && $this->classes[$class];
+        $result = [];
+        $selectors = self::parseSelector( $selector );
+        var_dump($selectors);
+
+        while ($this->nextNode())
+        {
+            if ($this->_is( $selectors, $this->node )) array_push( $result, $this->node );
+        }
+        return $result;
     }
 
-    public function hasClass( $class )
+    public function is( $selector )
     {
-        return array_key_exists( $class, $this->classes ) && $this->classes[$class] === $this->level;
+        $selectors = self::parseSelector( $selector );
+        return $this->_is( $selectors, $this->node );
+    }
+
+    private function _is( &$selectors, &$node )
+    {
+        foreach( $selectors as $selector)
+        {
+            if ($this->_isSingle( $selector, $node )) return true;
+        }
+        return false;
+    }
+
+    private function _isSingle( &$selector, &$node )
+    {
+        $numParts = count( $selector );
+        $pointer = $node;
+        for ($i = 0; $i < $numParts; $i++)
+        {
+            // traverse up if possible and we're not searching for the final target until we find the current target
+            while (!$this->_isPart( $selector[$i], $pointer ))
+            {
+                if ($i && $pointer->parentNode) $pointer = $pointer->parentNode;
+                else return false;
+            }
+        }
+        return true;
+    }
+
+    private function _isPart( &$part, &$node )
+    {
+        // compare HTML tag
+        if ($part['tag'] && $node->nodeName !== $part['tag']) return false;
+        // compare id attribute
+        if ($part['id'] && (!$node->hasAttribute( 'id' ) || $node->getAttribute( 'id' ) !== $part['id'])) return false;
+        // compare classes
+        if ($part['classes']) foreach ($part['classes'] as $class) if (!$this->_hasClass( $class, $node )) return false;
+
+        return true;
+    }
+
+    private function _hasClass( $class, &$node )
+    {
+        return ($node instanceof DOMElement) && $node->hasAttribute( 'class' ) && preg_match( '/(^| )' . $class . '($| )/', $node->getAttribute( 'class' ) );
     }
 }
+
+$dt = new DomTreeTraverser();
+$dt->loadHtml( '<div class="a"><img src="a.jpg"/></div> <div class="b"><img src="b.jpg"/></div>' );
+var_dump( $dt->find( '.b img' ) );
