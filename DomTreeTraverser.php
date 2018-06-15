@@ -177,14 +177,13 @@ class DomTreeTraverser {
 
     public function replace( &$node, $html )
     {
-        if (!$node->parentNode) return false;
-
+        // load new node from HTML
         $d = new DOMDocument();
         $d->loadHtml( $html );
-        echo $d->saveHtml(), "<br>";
-        $e = $d->documentElement->firstChild;
-        $node->parentNode->replaceChild( $this->dom->importNode( $e ), $node );
-        return true;
+        $e = $d->documentElement->firstChild->firstChild;
+
+        // import new node to target document and replace old node
+        $node->parentNode->replaceChild( $this->dom->importNode( $e, true ), $node );
     }
 
     public function getHtml()
