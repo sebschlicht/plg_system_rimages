@@ -12,22 +12,12 @@ class PlgSystemRimages extends JPlugin
     /**
      * configuration key for the global image configuration
      */
-    const CFG_GLOBAL = 'global';
+    private static $CFG_GLOBAL = 'global';
 
     /**
      * configuration key for the content image configuration
      */
-    const CFG_CONTENT = 'content';
-
-    /**
-     * configuration key for image configurations per module position
-     */
-    const CFG_MODULE_POSITION = 'module-position';
-
-    /**
-     * configuration key for image configurations per module
-     */
-    const CFG_MODULE = 'module';
+    private static $CFG_CONTENT = 'content';
 
     /**
      * parsed plugin configuration
@@ -80,34 +70,11 @@ class PlgSystemRimages extends JPlugin
             return true;
         }
 
-        // configuration: content || global
-        $configuration = $this->loadConfiguredBreakpoints( self::CFG_CONTENT );
-        if (!$configuration) $configuration = $this->loadConfiguredBreakpoints( self::CFG_GLOBAL );
+        // load breakpoints from content configuration, (generate and) inject responsive images
+        $breakpointPackages = $this->loadBreakpointPackages( self::$CFG_CONTENT );
+        $row->text = $this->processHtml( $row->text, $breakpointPackages );
 
-        // (generate and) inject responsive images
-        $row->text = $this->processHtml( $row->text, $configuration );
-        
         return true;
-    }
-    
-    /**
-     * Trigger the processing of module HTML code when in front-end.
-     * 
-     * @param object &$module A reference to a Module object that holds all the data of the module
-     * @param array &$attribs An array of attributes for the module
-     */
-    public function onAfterRenderModule( &$module, &$attribs )
-    {
-        $app = JFactory::getApplication();
-        if ($app->isSite())
-        {
-            // configuration: module || module position || global
-            $configuration = $this->loadConfiguredBreakpoints( self::CFG_MODULE, $module->id );
-            if (!$configuration) $configuration = $this->loadConfiguredBreakpoints( self::CFG_MODULE_POSITION, $module->position );
-            if (!$configuration) $configuration = $this->loadConfiguredBreakpoints( self::CFG_GLOBAL );
-
-            $module->content = $this->processHtml( $module->content, $configuration );
-        }
     }
 
     /**
@@ -118,9 +85,9 @@ class PlgSystemRimages extends JPlugin
         $app = JFactory::getApplication();
         if ($app->isSite())
         {
-            // configuration: global
-            $configuration = $this->loadConfiguredBreakpoints( self::CFG_GLOBAL );
-            JResponse::setBody( $this->processHtml( JResponse::getBody(), $configuration ) );
+            // load breakpoints from global configuration, (generate and) inject responsive images
+            $breakpointPackages = $this->loadBreakpointPackages( self::$CFG_GLOBAL );
+            JResponse::setBody( $this->processHtml( JResponse::getBody(), $breakpointPackages ) );
         }
     }
     
@@ -129,13 +96,13 @@ class PlgSystemRimages extends JPlugin
      * Processing, in this context, means to wrap images with a picture tag and add alternative version according to the configuration.
      * 
      * @param string $html HTML code to process
-     * @param array $configuration configured breakpoints
+     * @param array $breakpointPackages configured breakpoint packages
      * @return string passed HTML code with responsive images
      */
-    private function processHtml( $html, $breakpoints )
+    private function processHtml( $html, $breakpointPackages )
     {
         // don't process HTML without configure breakpoints
-        if (!$breakpoints || !$html) return $html;
+        if (!$breakpointPackages || !$html) return $html;
 
         // set up DOM tree traverser
         $dt = new DomTreeTraverser();
@@ -143,23 +110,33 @@ class PlgSystemRimages extends JPlugin
         $dt->loadHtml( $html );
         libxml_clear_errors();
 
-        // find all images outside of picture tags
-        // TODO use user-specified selector
-        $images = $dt->find( 'img' );
-        $images = $dt->remove( $images, 'picture img' );
-
-        $didMagic = false;
-        foreach ($images as $image)
+        // process configured breakpoint packages
+        $imagesReplaced = false;
+        $canGenerateImages = extension_loaded( 'imagick' );
+        $globalGenerateImages = $this->params->get( 'generate_images', false );
+        $generateImages = false;
+        foreach ($breakpointPackages as $breakpointPackage)
         {
-            $sources = $this->getAvailableSources( $image, $breakpoints );
-            if ($sources)
+            // check if image generation enabled
+            $generateImages = $canGenerateImages
+                && array_key_exists( 'generate_images', $breakpointPackage) ? $breakpointPackage['generate_images'] : $globalGenerateImages;
+
+            // find matching non-responsive images
+            $images = $dt->find( $breakpointPackage['selector'] );
+            $images = $dt->remove( $images, 'picture img' );
+
+            // process specified images
+            foreach ($images as $image)
             {
-                $dt->replaceImageTag( $image, $sources );
-                $didMagic = true;
+                $sources = $this->getAvailableSources( $image, $breakpointPackage['breakpoints'], $generateImages );
+                if ($sources)
+                {
+                    $dt->replaceImageTag( $image, $sources );
+                    $imagesReplaced = true;
+                }
             }
         }
-
-        return $didMagic ? $dt->getHtml() : $html;
+        return $imagesReplaced ? $dt->getHtml() : $html;
     }
 
     private function getAvailableSources( &$image, &$breakpoints, $doGenerateMissingSources = false )
@@ -186,9 +163,12 @@ class PlgSystemRimages extends JPlugin
             // generate the file if not available and automatic creation enabled
             if (!is_file( $srcResponsive ))
             {
-                if (!$doGenerateMissingSources) continue;
+                if (!$doGenerateMissingSources || !$breakpoint['image'] || $localBasePath['isExternalUrl']) continue;
+                var_dump('ill try');
 
-                // TODO not implemented
+                // TODO use real extension
+                $srcPath = JPATH_ROOT . DIRECTORY_SEPARATOR . $localBasePath['directory'] . DIRECTORY_SEPARATOR . $localBasePath['filename'] . '.' . $localBasePath['extension'];
+                if (!$this->generateImage( $srcPath, $srcResponsive, $breakpoint['image'] )) continue;
             }
 
             // build and add source tag
@@ -220,6 +200,7 @@ class PlgSystemRimages extends JPlugin
             $path = pathinfo( $imgSrc );
             $directory = $path['dirname'];
             $filename = $path['filename'];
+            $extension = $path['extension'];
             $isExternalUrl = false;
         }
         else
@@ -233,17 +214,20 @@ class PlgSystemRimages extends JPlugin
                 $path = pathinfo( $url['path'] );
                 $directory = substr( $path['dirname'], strlen( JUri::base( true ) ) + 1 );
                 $filename = $path['filename'];
+                $extension = $path['extension'];
             }
             else
             {
                 // TODO? option to convert and store external images in a local folder
                 $directory = null;
                 $filename = null;
+                $extension = null;
             }
         }
         return [
             'directory' => $directory,
             'filename' => $filename,
+            'extension' => $extension,
             'isExternalUrl' => $isExternalUrl,
         ];
     }
@@ -268,31 +252,6 @@ class PlgSystemRimages extends JPlugin
     }
 
     /**
-     * Loads the breakpoints from a section or subsection of the plugin configuration.
-     * 
-     * @param string $section name of the configuration section
-     * @param string $subsection (optional) name of a subsection of the specified section
-     * @return array the specified breakpoints from the plugin configuration or null if a subsection has been specified but is missing
-     */
-    private function loadConfiguredBreakpoints( $section, $subsection = null )
-    {
-        // parse configuration once per request
-        if ( !$this->config )
-        {
-            $this->config = [
-                self::CFG_MODULE => $this->loadFlatBreakpoints( 'module-id', 'module-breakpoints' ),
-                self::CFG_MODULE_POSITION => $this->loadFlatBreakpoints( 'modpos-position', 'modpos-breakpoints' ),
-                self::CFG_CONTENT => $this->loadSubformBreakpoints( 'content-items' ),
-                self::CFG_GLOBAL => $this->loadSubformBreakpoints( 'global-items' ),
-            ];
-        }
-
-        // retrieve section or subsection if specified and existing
-        if (!$subsection) return $this->config[$section];
-        else return array_key_exists( $subsection, $this->config[$section] ) ? $this->config[$section][$subsection] : false;
-    }
-
-    /**
      * Loads breakpoints from the plugin configuration that are stored in a flat manner, having a single identifier field.
      * Both field names are expected to be suffixed by increasing numbers, starting at 1.
      * 
@@ -300,40 +259,58 @@ class PlgSystemRimages extends JPlugin
      * @param string $fieldnameBreakpoints name of the breakpoint list field
      * @return array breakpoints grouped by seen identifiers
      */
-    private function loadFlatBreakpoints( $fieldnameId, $fieldnameBreakpoints )
+    private function loadBreakpointPackages( $fieldPrefix )
     {
-        // search for tuples of id and breakpoints as long as such tuples are available
-        $result = [];
-        for ($i = 1; $i === 1 || $id && $breakpoints; $i++)
+        $castToArray = function( $o ) { return (array) $o; };
+
+        // search for tuples of selector and breakpoints as long as such tuples are available
+        $packages = [];
+        for ($i = 1; $i === 1 || $selector && $breakpoints; $i++)
         {
             // try to retrieve tuple with current index
-            $id = $this->params->get( "$fieldnameId$i", false );
-            $breakpoints = $this->params->get( "$fieldnameBreakpoints$i", false );
+            $selector = $this->params->get( "{$fieldPrefix}_selector$i", false );
+            $breakpoints = $this->params->get( "{$fieldPrefix}_breakpoints$i", false );
+            $generateImages = $this->params->get( "{$fieldPrefix}_generate_images", null );
 
-            // add breakpoints as plain array
-            if ($id && $breakpoints)
+            if ($selector && $breakpoints)
             {
-                $result[$id] = array_values( (array) $breakpoints );
+                // build and add breakpoint package
+                $package = [
+                    'selector' => $selector,
+                    'breakpoints' => array_map( $castToArray, array_values( (array) $breakpoints ) ),
+                ];
+                if ($generateImages !== null) $package['generate_images'] = $generateImages;
+
+                array_push( $packages, $package );
             }
         }
-        return $result;
+        return $packages;
     }
 
-    /**
-     * Loads breakpoints from the plugin configuration that are stored in a (multiple) subform field.
-     * 
-     * @param string $name name of the subform field
-     * @return array breakpoints represented by the subform items
-     */
-    private function loadSubformBreakpoints( $name )
+    private function generateImage( $source, $target, $maxWidth )
     {
-        $result = $this->params->get( $name, false );
-        if ($result)
+        if (!is_file( $source )) return false;
+
+        $im = new Imagick();
+        $im->readImage( $source );
+        $im = $im->flattenImages();
+
+        $im->stripImage();
+
+        $imgWidth = $im->getImageWidth();
+        if ($imgWidth > $maxWidth)
         {
-            // transform object with sub-objects to a plain array
-            $castToArray = function( $o ) { return (array) $o; };
-            $result = array_map( $castToArray, array_values( (array) $result ) );
+            $targetHeight = $maxWidth * ($im->getImageHeight() / $imgWidth);
+            $im->resizeImage( $maxWidth, $targetHeight, Imagick::FILTER_SINC, 1 );
         }
-        return $result ? $result : [];
+
+        $im->setImageFormat( 'jpg' );
+        $im->setImageCompression( Imagick::COMPRESSION_JPEG );
+        $im->setImageCompressionQuality( 85 );
+        $im->setInterlaceScheme( Imagick::INTERLACE_JPEG );
+
+        $im->transformImageColorspace( Imagick::COLORSPACE_SRGB );
+
+        return $im->writeImage( $target );
     }
 }

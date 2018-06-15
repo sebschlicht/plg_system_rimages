@@ -33,34 +33,33 @@
   <config>
     <fields name="params" addfieldpath="plugins/system/rimages/fields">
       <fieldset name="basic">
+        <field type="radio" name="generate_images"
+          label="PLG_SYSTEM_RIMAGES_CFG_GENERATE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GENERATE_IMAGES_DESC"
+          class="btn-group btn-group-yesno" default="0">
+          <option value="1">JYES</option>
+          <option value="0">JNO</option>
+        </field>
       </fieldset>
       <fieldset name="global">
-        <field type="subform" name="global-items"
-          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_ITEMS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_ITEMS_DESC"
-          formsource="/plugins/system/rimages/forms/width.xml"
+        <field type="text" name="global_selector1"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="list" name="global_generate_images1"
+          label="PLG_SYSTEM_RIMAGES_CFG_PACKAGE_GENERATE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_PACKAGE_GENERATE_IMAGES_DESC"
+          useglobal="true" class="chzn-color">
+          <option value="1">JYES</option>
+          <option value="0">JNO</option>
+        </field>
+        <field type="subform" name="global_breakpoints1"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
           multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
       </fieldset>
       <fieldset name="content">
-        <field type="subform" name="content-items"
-          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_ITEMS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_ITEMS_DESC"
-          formsource="/plugins/system/rimages/forms/width.xml"
-          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
-      </fieldset>
-      <fieldset name="modpos" addfieldpath="administrator/components/com_modules/models/fields">
-        <field type="moduleposition" name="modpos-position1"
-          label="PLG_SYSTEM_RIMAGES_CFG_MODPOS_MODULE_POSITION_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_MODPOS_MODULE_POSITION_DESC"
-          default="" maxlength="50"/>
-        <field type="subform" name="modpos-breakpoints1"
-          label="PLG_SYSTEM_RIMAGES_CFG_MODPOS_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_MODPOS_BREAKPOINTS_DESC"
-          formsource="/plugins/system/rimages/forms/width.xml"
-          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
-      </fieldset>
-      <fieldset name="modules">
-        <field type="text" name="module-id1"
-          label="PLG_SYSTEM_RIMAGES_CFG_MODULE_ID_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_MODULE_ID_DESC"/>
-        <field type="subform" name="module-breakpoints1"
-          label="PLG_SYSTEM_RIMAGES_CFG_MODULE_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_MODULE_BREAKPOINTS_DESC"
-          formsource="/plugins/system/rimages/forms/width.xml"
+        <field type="text" name="content_selector1"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints1"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
           multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
       </fieldset>
     </fields>
