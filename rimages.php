@@ -3,6 +3,8 @@
 // no direct access
 defined( '_JEXEC' ) or die;
 
+require_once 'DomTreeTraverser.php';
+
 class PlgSystemRimages extends JPlugin
 {
     // TODO class constants require PHP 5.5+
@@ -133,57 +135,71 @@ class PlgSystemRimages extends JPlugin
     private function processHtml( $html, $breakpoints )
     {
         // don't process HTML without configure breakpoints
-        if (!$breakpoints) return $html;
+        if (!$breakpoints || !$html) return $html;
+
+        // set up DOM tree traverser
+        $dt = new DomTreeTraverser();
+        libxml_use_internal_errors( true );
+        $dt->loadHtml( $html );
+        libxml_clear_errors();
 
         // find all images outside of picture tags
-        $regexImages = '/<picture>.*?<\/picture>(*SKIP)(*FAIL)|<img.*?src=[\"\']?([^\"\'\s]*)[\"\']?.*?>/';
-        $matches = [];
-        preg_match_all($regexImages, $html, $matches, PREG_SET_ORDER);
+        // TODO use user-specified selector
+        $images = $dt->find( 'img' );
+        $images = $dt->remove( $images, 'picture img' );
 
-        // loop detected images
-        foreach ($matches as $match)
+        $didMagic = false;
+        foreach ($images as $image)
         {
-            // extract path information from image source
-            $localBasePath = $this->extractPathInfo( $match[1] );
-
-            // loop configured max-widths
-            $imageVersions = [];
-            foreach ($breakpoints as $breakpoint)
+            $sources = $this->getAvailableSources( $image, $breakpoints );
+            if ($sources)
             {
-                // load targeted viewport width
-                $viewportWidth = $breakpoint[$breakpoint['type'] === '0' ? 'custom' : 'type'];
-                $viewportWidthValue = $this->getWidthValue( $viewportWidth, $breakpoint['border'] );
-
-                // build path to respective responsive version
-                $srcResponsive = $this->buildFilePath( $localBasePath['directory'], $localBasePath['filename'], $viewportWidthValue );
-
-                // generate the file if not available
-                if (!is_file( $srcResponsive ))
-                {
-                    // TODO not implemented
-                    continue;
-                }
-
-                // build and add source tag
-                $sourceTag = $this->generateShortTag( 'source', [
-                    'media' => '(' . ($breakpoint['border'] === 'max' ? 'max' : 'min') . "-width: {$viewportWidthValue}px)",
-                    'srcset' => $srcResponsive,
-                    'data-rimages-w' => $viewportWidthValue,
-                ] );
-                array_push( $imageVersions, $sourceTag );
-            }
-            
-            if ($imageVersions)
-            {
-                // add original version
-                array_push( $imageVersions, $match[0] );
-                            
-                // create and inject a picture tag with all versions
-                $pictureTag = '<picture>' . implode( '', $imageVersions ) . '</picture>';
-                $html = preg_replace( $regexImages, $pictureTag, $html, 1 );
+                $dt->replaceImageTag( $image, $sources );
+                $didMagic = true;
             }
         }
-        return $html;
+
+        return $didMagic ? $dt->getHtml() : $html;
+    }
+
+    private function getAvailableSources( &$image, &$breakpoints, $doGenerateMissingSources = false )
+    {
+        // try to load image source
+        $src = $image->hasAttribute( 'src' ) ? $image->getAttribute( 'src' ) : false;
+        if (!$src) return false;
+
+        // extract path information from image source
+        $localBasePath = $this->extractPathInfo( $src );
+
+        // loop configured breakpoints
+        $sources = [];
+        foreach( $breakpoints as $breakpoint)
+        {
+            // load targeted viewport width
+            $viewportWidth = $breakpoint[$breakpoint['type'] === '0' ? 'custom' : 'type'];
+            $viewportWidthValue = $this->getWidthValue( $viewportWidth, $breakpoint['border'] );
+            if (!$viewportWidthValue) continue;
+
+            // build path to respective responsive version
+            $srcResponsive = $this->buildFilePath( $localBasePath['directory'], $localBasePath['filename'], $viewportWidthValue );
+
+            // generate the file if not available and automatic creation enabled
+            if (!is_file( $srcResponsive ))
+            {
+                if (!$doGenerateMissingSources) continue;
+
+                // TODO not implemented
+            }
+
+            // build and add source tag
+            $sourceTag = $this->generateShortTag( 'source', [
+                'media' => '(' . ($breakpoint['border'] === 'max' ? 'max' : 'min') . "-width: {$viewportWidthValue}px)",
+                'srcset' => $srcResponsive,
+                'data-rimages-w' => $viewportWidthValue,
+            ] );
+            array_push( $sources, $sourceTag );
+        }
+        return $sources;
     }
 
     private function generateShortTag( $tag, $attributes )
@@ -297,7 +313,7 @@ class PlgSystemRimages extends JPlugin
             // add breakpoints as plain array
             if ($id && $breakpoints)
             {
-                $result[$key] = array_values( (array) $breakpoints );
+                $result[$id] = array_values( (array) $breakpoints );
             }
         }
         return $result;

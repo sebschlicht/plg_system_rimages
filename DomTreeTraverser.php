@@ -8,7 +8,7 @@ class DomTreeTraverser {
 
     private $breakpoints;
 
-    public function loadHtml( $html )
+    public function loadHtml( &$html )
     {
         $this->dom = new DOMDocument('1.0','UTF-8');
         $this->dom->substituteEntities = FALSE;
@@ -16,7 +16,8 @@ class DomTreeTraverser {
         $this->dom->strictErrorChecking = FALSE;
         $this->dom->loadHtml( $html );
 
-        $this->node = null;
+        $this->node = $this->dom->documentElement->firstChild;
+        if ($this->node->tagName === 'head' && $this->node->nextSibling) $this->node = $this->node->nextSibling;
     }
 
     public function find( $selector )
@@ -24,7 +25,8 @@ class DomTreeTraverser {
         $result = [];
         $selectors = self::parseSelector( $selector );
 
-        while ($this->nextNode())
+        $i = 0;
+        while ($this->nextNode() && $i++ < 1000)
         {
             // skip text nodes
             if ($this->node->nodeType !== 1) continue;
@@ -48,12 +50,6 @@ class DomTreeTraverser {
 
     private function nextNode( $allowDeeper = true )
     {
-        if ($this->node === null)
-        {
-            $this->node = $this->dom->documentElement;
-            return true;
-        }
-
         $node = $this->node;
         $traversingUp = false;
 
@@ -175,14 +171,17 @@ class DomTreeTraverser {
         return $result;
     }
 
-    public function replace( &$node, $html )
+    public function replaceImageTag( &$node, &$sources )
     {
-        // load new node from HTML
+        // create DOM node from sources
         $d = new DOMDocument();
-        $d->loadHtml( $html );
+        $d->loadHtml( '<picture>' . implode( '', $sources ) . '</picture>' );
         $e = $d->documentElement->firstChild->firstChild;
 
-        // import new node to target document and replace old node
+        // append original img tag 
+        $e->appendChild( $d->importNode( $node ) );
+
+        // replace img tag in target document
         $node->parentNode->replaceChild( $this->dom->importNode( $e, true ), $node );
     }
 
@@ -191,22 +190,3 @@ class DomTreeTraverser {
         return $this->dom->saveHtml();
     }
 }
-
-/*
- current execution time of 1000 iterations: 7.1s -> 7ms per loop
- */
-
-$dt = new DomTreeTraverser();
-$dt->loadHtml( '<div class="a"><img src="a.jpg"/></div> <div class="b"><img src="b.jpg"/><picture><source /><img src="p-b.jpg"/></picture></div>' );
-$images = $dt->find( 'img' );
-var_dump(count($images) . ' images');
-echo "<br><br>";
-$images = $dt->remove( $images, 'picture img' );
-var_dump(count($images) . ' outside of picture tag');
-echo "<br><br>";
-foreach( $images as $img )
-{
-    $dt->replace( $img, "<picture><img src=\"blubb.jpg\"/></picture>" );
-}
-echo $dt->getHtml();
-?>
