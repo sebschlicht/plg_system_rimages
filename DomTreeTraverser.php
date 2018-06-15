@@ -156,7 +156,7 @@ class DomTreeTraverser {
 
     private static function _parsePart( &$part )
     {
-        $atoms = preg_split( '/(?=[.#])/', $part, 0, PREG_SPLIT_NO_EMPTY );
+        $atoms = preg_split( '/(?=[.#])/', trim( $part ), 0, PREG_SPLIT_NO_EMPTY );
         $result = [
             'id' => false,
             'classes' => false,
