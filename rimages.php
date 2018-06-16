@@ -4,11 +4,10 @@
 defined( '_JEXEC' ) or die;
 
 require_once 'DomTreeTraverser.php';
+require_once 'HtmlHelper.php';
 
 class PlgSystemRimages extends JPlugin
 {
-    // TODO class constants require PHP 5.5+
-
     /**
      * configuration key for the global image configuration
      */
@@ -172,11 +171,11 @@ class PlgSystemRimages extends JPlugin
                 // build file path to original file and generate responsive version
                 $srcOriginal = $this->buildOriginalFilePath( $localBasePath['directory'], $localBasePath['filename'], $localBasePath['extension'] );
 
-                if (!self::isWritable( $srcResponsive ) || !$this->generateImage( $srcOriginal, $srcResponsive, $breakpoint['image'] )) continue;
+                if (!self::isWritable( $srcResponsive ) || !self::generateImage( $srcOriginal, $srcResponsive, $breakpoint['image'] )) continue;
             }
 
             // build and add source tag
-            $sourceTag = $this->generateShortTag( 'source', [
+            $sourceTag = HtmlHelper::generateShortTag( 'source', [
                 'media' => '(' . ($breakpoint['border'] === 'max' ? 'max' : 'min') . "-width: {$viewportWidthValue}px)",
                 'srcset' => $srcResponsive,
                 'data-rimages-w' => $viewportWidthValue,
@@ -184,16 +183,6 @@ class PlgSystemRimages extends JPlugin
             array_push( $sources, $sourceTag );
         }
         return $sources;
-    }
-
-    private function generateShortTag( $tag, $attributes )
-    {
-        $result = "<$tag";
-        foreach ($attributes as $key => $value)
-        {
-            $result .= " $key=\"$value\"";
-        }
-        return $result . '/>';
     }
 
     private function extractPathInfo( $imgSrc )
@@ -304,7 +293,13 @@ class PlgSystemRimages extends JPlugin
         return $packages;
     }
 
-    private function generateImage( $source, $target, $maxWidth )
+    /**
+     * Generates a reduced JPEG version of an image, following the Google PageSpeed Insight recommendation for images.
+     * 
+     * @param string $source path to the original image
+     * @param string $target target path for the file being generated
+     */
+    private static function generateImage( $source, $target, $maxWidth )
     {
         $im = new Imagick();
         $im->readImage( $source );
@@ -319,6 +314,7 @@ class PlgSystemRimages extends JPlugin
             $im->resizeImage( $maxWidth, $targetHeight, Imagick::FILTER_SINC, 1 );
         }
 
+        // TODO determine desired image format from target path, check for necessity if not JPG (e.g. transparent background)
         $im->setImageFormat( 'jpg' );
         $im->setImageCompression( Imagick::COMPRESSION_JPEG );
         $im->setImageCompressionQuality( 85 );

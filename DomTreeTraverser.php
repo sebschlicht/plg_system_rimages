@@ -1,6 +1,10 @@
 <?php
 
-class DomTreeTraverser {
+// no direct access
+defined( '_JEXEC' ) or die;
+
+class DomTreeTraverser
+{
 
     private $dom;
 
