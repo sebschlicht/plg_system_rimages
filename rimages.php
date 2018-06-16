@@ -172,7 +172,7 @@ class PlgSystemRimages extends JPlugin
                 // build file path to original file and generate responsive version
                 $srcOriginal = $this->buildOriginalFilePath( $localBasePath['directory'], $localBasePath['filename'], $localBasePath['extension'] );
 
-                if (!$this->generateImage( $srcOriginal, $srcResponsive, $breakpoint['image'] )) continue;
+                if (!self::isWritable( $srcResponsive ) || !$this->generateImage( $srcOriginal, $srcResponsive, $breakpoint['image'] )) continue;
             }
 
             // build and add source tag
@@ -248,6 +248,11 @@ class PlgSystemRimages extends JPlugin
         if (substr( $directory, 0, 1 ) === '/') $directory = substr( $directory, strlen( JURI::base( true ) ) + 1 );
 
         return JPATH_ROOT . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $filename . ".$extension";
+    }
+
+    private static function isWritable( $path )
+    {
+        return is_writable( is_dir( $path ) ? $path : dirname( $path ) );
     }
 
     private function getWidthValue( $widthName, $border )
