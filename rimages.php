@@ -104,6 +104,8 @@ class PlgSystemRimages extends JPlugin
         // don't process HTML without configure breakpoints
         if (!$breakpointPackages || !$html) return $html;
 
+        $filterImages = function ( $node ) { return $node->tagName === 'img'; };
+
         // set up DOM tree traverser
         $dt = new DomTreeTraverser();
         libxml_use_internal_errors( true );
@@ -124,6 +126,7 @@ class PlgSystemRimages extends JPlugin
             // find matching non-responsive images
             $images = $dt->find( $breakpointPackage['selector'] );
             $images = $dt->remove( $images, 'picture img' );
+            $images = array_map( $filterImages, $images );
 
             // process specified images
             foreach ($images as $image)
@@ -234,7 +237,7 @@ class PlgSystemRimages extends JPlugin
 
     private function buildFilePath( $directory, $filename, $width )
     {
-        // TODO support other image formats
+        // TODO? support other image formats
         return $directory . DIRECTORY_SEPARATOR . $filename . "_$width.jpg";
     }
 
@@ -310,6 +313,7 @@ class PlgSystemRimages extends JPlugin
         $im->setInterlaceScheme( Imagick::INTERLACE_JPEG );
 
         $im->transformImageColorspace( Imagick::COLORSPACE_SRGB );
+        $im->setSamplingFactors( ['2x2', '1x1', '1x1'] );
 
         return $im->writeImage( $target );
     }
