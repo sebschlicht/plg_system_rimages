@@ -166,10 +166,10 @@ class PlgSystemRimages extends JPlugin
             // generate the file if not available and automatic creation enabled
             if (!is_file( $srcResponsive ))
             {
+                // check if image generation is enabled and possible
                 if (!$doGenerateMissingSources || !$breakpoint['image'] || $localBasePath['isExternalUrl']) continue;
-                var_dump('ill try');
 
-                // TODO use real extension
+                // TODO directories are mixed up, with and without base prefix
                 $srcPath = JPATH_ROOT . DIRECTORY_SEPARATOR . $localBasePath['directory'] . DIRECTORY_SEPARATOR . $localBasePath['filename'] . '.' . $localBasePath['extension'];
                 if (!$this->generateImage( $srcPath, $srcResponsive, $breakpoint['image'] )) continue;
             }
