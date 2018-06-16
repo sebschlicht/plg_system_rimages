@@ -126,7 +126,7 @@ class PlgSystemRimages extends JPlugin
             // find matching non-responsive images
             $images = $dt->find( $breakpointPackage['selector'] );
             $images = $dt->remove( $images, 'picture img' );
-            $images = array_map( $filterImages, $images );
+            $images = array_filter( $images, $filterImages );
 
             // process specified images
             foreach ($images as $image)
@@ -169,9 +169,10 @@ class PlgSystemRimages extends JPlugin
                 // check if image generation is enabled and possible
                 if (!$doGenerateMissingSources || !$breakpoint['image'] || $localBasePath['isExternalUrl']) continue;
 
-                // TODO directories are mixed up, with and without base prefix
-                $srcPath = JPATH_ROOT . DIRECTORY_SEPARATOR . $localBasePath['directory'] . DIRECTORY_SEPARATOR . $localBasePath['filename'] . '.' . $localBasePath['extension'];
-                if (!$this->generateImage( $srcPath, $srcResponsive, $breakpoint['image'] )) continue;
+                // build file path to original file and generate responsive version
+                $srcOriginal = $this->buildOriginalFilePath( $localBasePath['directory'], $localBasePath['filename'], $localBasePath['extension'] );
+
+                if (!$this->generateImage( $srcOriginal, $srcResponsive, $breakpoint['image'] )) continue;
             }
 
             // build and add source tag
@@ -241,6 +242,14 @@ class PlgSystemRimages extends JPlugin
         return $directory . DIRECTORY_SEPARATOR . $filename . "_$width.jpg";
     }
 
+    private function buildOriginalFilePath( $directory, $filename, $extension )
+    {
+        // make absolute paths relative
+        if (substr( $directory, 0, 1 ) === '/') $directory = substr( $directory, strlen( JURI::base( true ) ) + 1 );
+
+        return JPATH_ROOT . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $filename . ".$extension";
+    }
+
     private function getWidthValue( $widthName, $border )
     {
         if (filter_var( $widthName, FILTER_VALIDATE_INT ) === false)
@@ -292,11 +301,9 @@ class PlgSystemRimages extends JPlugin
 
     private function generateImage( $source, $target, $maxWidth )
     {
-        if (!is_file( $source )) return false;
-
         $im = new Imagick();
         $im->readImage( $source );
-        $im = $im->flattenImages();
+        $im = $im->mergeImageLayers( Imagick::LAYERMETHOD_FLATTEN );
 
         $im->stripImage();
 
