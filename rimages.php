@@ -56,7 +56,8 @@ class PlgSystemRimages extends JPlugin
 
         // load breakpoints from content configuration, (generate and) inject responsive images
         $breakpointPackages = $this->loadBreakpointPackages( self::$CFG_CONTENT );
-        $row->text = $this->processHtml( $row->text, $breakpointPackages );
+        $html = $this->processHtml( $row->text, $breakpointPackages );
+        if ($html) $row->text = $html;
 
         return true;
     }
@@ -71,7 +72,9 @@ class PlgSystemRimages extends JPlugin
         {
             // load breakpoints from global configuration, (generate and) inject responsive images
             $breakpointPackages = $this->loadBreakpointPackages( self::$CFG_GLOBAL );
-            JResponse::setBody( $this->processHtml( JResponse::getBody(), $breakpointPackages ) );
+
+            $html = $this->processHtml( JResponse::getBody(), $breakpointPackages );
+            if ($html) JResponse::setBody( $html );
         }
     }
     
@@ -81,20 +84,18 @@ class PlgSystemRimages extends JPlugin
      * 
      * @param string $html HTML code to process
      * @param array $breakpointPackages configured breakpoint packages
-     * @return string passed HTML code with responsive images
+     * @return string|bool passed HTML code with responsive images or false if no non-responsible images found
      */
     private function processHtml( $html, $breakpointPackages )
     {
         // don't process HTML without configure breakpoints
-        if (!$breakpointPackages || !$html) return $html;
-
-        $filterImages = function ( $node ) { return $node->tagName === 'img'; };
+        if (!$breakpointPackages || !$html) return false;
 
         // set up DOM tree traverser
         $dt = new DomTreeTraverser();
-        libxml_use_internal_errors( true );
         $dt->loadHtml( $html );
-        libxml_clear_errors();
+
+        $filterImages = function ( $node ) { return $node->tagName === 'img'; };
 
         // process configured breakpoint packages
         $imagesReplaced = false;
@@ -124,7 +125,7 @@ class PlgSystemRimages extends JPlugin
                 }
             }
         }
-        return $imagesReplaced ? $dt->getHtml() : $html;
+        return $imagesReplaced ? $dt->getHtml() : false;
     }
 
     /**

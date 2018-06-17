@@ -3,6 +3,9 @@
 // no direct access
 defined( '_JEXEC' ) or die;
 
+// dependencies
+require_once 'HtmlHelper.php';
+
 /**
  * Class to load a DOM tree and find particular sets of nodes via CSS selectors like in jQuery.
  */
@@ -19,6 +22,11 @@ class DomTreeTraverser
     private $node;
 
     /**
+     * DOM tree loading errors
+     */
+    public $errors;
+
+    /**
      * Loads the DOM tree of a HTML document.
      * 
      * @param string $html HTML code of the document
@@ -29,11 +37,23 @@ class DomTreeTraverser
         $this->dom->substituteEntities = FALSE;
         $this->dom->recover = TRUE;
         $this->dom->strictErrorChecking = FALSE;
-        $this->dom->loadHtml( $html );
+
+        // filter warnings; it seems as a doctype, html and body tags lead to warnings
+        libxml_use_internal_errors( true );
+        $this->dom->loadHtml( $html, LIBXML_NOWARNING );
+        $filterHtml5Warnings = function( &$error ) {
+            if ($error->code !== 800) return false;
+            elseif ($error->code !== 801) return true;
+            return preg_match( '/^Tag (\w+) invalid/', $error->message, $match ) ? !HtmlHelper::isHtml5Tag( $match[1] ) : true;
+        };
+        $this->errors = array_filter( libxml_get_errors(), $filterHtml5Warnings );
+        libxml_clear_errors();
 
         // start with the body tag
         $this->node = $this->dom->documentElement->firstChild;
-        if ($this->node->tagName === 'head' && $this->node->nextSibling) $this->node = $this->node->nextSibling;
+        if ($this->node->nodeName === 'head' && $this->node->nextSibling) $this->node = $this->node->nextSibling;
+        
+        return !$this->errors;
     }
 
     /**

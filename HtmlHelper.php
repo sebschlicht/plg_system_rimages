@@ -9,6 +9,30 @@ defined( '_JEXEC' ) or die;
 class HtmlHelper
 {
     /**
+     * valid HTML 5 tags
+     */
+    private static $HTML5_TAGS = [
+        // semantic and structural elements
+        'article', 'aside', 'details', 'dialog', 'figcaption', 'figure', 'footer', 'header', 'main', 'mark',
+        'menuitem', 'meter', 'nav', 'progress', 'rp', 'rt', 'ruby', 'section', 'summary', 'time',
+        // text-level elements
+        'bdi',  'wbr',
+        // form elements, graphics and media elements
+        'datalist', 'keygen', 'output', 'canvas', 'svg', 'audio', 'embed', 'picture', 'source', 'track', 'video',
+    ];
+
+    /**
+     * Checks whether a tag is a HTML 5 tag.
+     * 
+     * @param string $tagName tag name
+     * @return bool true if the tag is a valid HTML 5 tag, false otherwise
+     */
+    public static function isHtml5Tag( $tagName )
+    {
+        return in_array( $tagName, self::$HTML5_TAGS );
+    }
+
+    /**
      * Builds the HTML string of a tag with attributes but no children.
      * 
      * @param string $tagName tag name
