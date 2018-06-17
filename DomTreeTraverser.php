@@ -277,19 +277,19 @@ class DomTreeTraverser
     }
 
     /**
-     * // TODO make it a replaceNode
+     * Replaces a node with a new node, read from HTML.
+     * 
+     * @param DOMNode $node node to be replaced
+     * @param string $html HTML code that the node should be replaced with
      */
-    public function replaceImageTag( &$node, &$sources )
+    public function replaceNode( &$node, $html )
     {
-        // create DOM node from sources
+        // create DOM node from HTML code
         $d = new DOMDocument();
-        $d->loadHtml( '<picture>' . implode( '', $sources ) . '</picture>' );
+        $d->loadHtml( $html );
         $e = $d->documentElement->firstChild->firstChild;
 
-        // append original img tag 
-        $e->appendChild( $d->importNode( $node ) );
-
-        // replace img tag in target document
+        // replace node in target document
         $node->parentNode->replaceChild( $this->dom->importNode( $e, true ), $node );
     }
 

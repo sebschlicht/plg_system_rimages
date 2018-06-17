@@ -109,7 +109,8 @@ class PlgSystemRimages extends JPlugin
                 $sources = $this->getAvailableSources( $image, $breakpointPackage['breakpoints'], $generateImages );
                 if ($sources)
                 {
-                    $dt->replaceImageTag( $image, $sources );
+                    // inject picture tag
+                    $dt->replaceNode( $image, '<picture>' . implode( '', $sources ) . '</picture>' );
                     $imagesReplaced = true;
                 }
             }
@@ -151,13 +152,17 @@ class PlgSystemRimages extends JPlugin
             }
 
             // build and add source tag
-            $sourceTag = HtmlHelper::generateShortTag( 'source', [
+            $sourceTag = HtmlHelper::buildSimpleTag( 'source', [
                 'media' => '(' . ($breakpoint['border'] === 'max' ? 'max' : 'min') . "-width: {$viewportWidthValue}px)",
                 'srcset' => $srcResponsive,
                 'data-rimages-w' => $viewportWidthValue,
             ] );
             array_push( $sources, $sourceTag );
         }
+
+        // add original image
+        array_push( $sources, HtmlHelper::buildSimpleTag( 'img', HtmlHelper::getNodeAttributes( $image ) ) );
+
         return $sources;
     }
 

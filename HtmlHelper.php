@@ -24,4 +24,23 @@ class HtmlHelper
         }
         return $html . '/>';
     }
+
+    /**
+     * Returns the attributes of a node.
+     * 
+     * @param DOMNode $node node
+     * @return array attributes of the specified node
+     */
+    public static function getNodeAttributes( &$node )
+    {
+        $attributes = [];
+        if ($node->hasAttributes())
+        {
+            foreach ($node->attributes as $attr)
+            {
+                $attributes[$attr->nodeName] = $attr->nodeValue;
+            }
+        }
+        return $attributes;
+    }
 }
