@@ -5,6 +5,7 @@ defined( '_JEXEC' ) or die;
 
 require_once 'DomTreeTraverser.php';
 require_once 'HtmlHelper.php';
+require_once 'PredefinedBreakpoints.php';
 
 class PlgSystemRimages extends JPlugin
 {
@@ -17,31 +18,6 @@ class PlgSystemRimages extends JPlugin
      * configuration key for the content image configuration
      */
     private static $CFG_CONTENT = 'content';
-
-    /**
-     * parsed plugin configuration
-     */
-    private $config;
-
-    /**
-     * pre-defined upper breakpoints (max-width)
-     */
-    private static $MAX_WIDTHS = [
-        // Bootstrap breakpoints
-        'xs' => 767,
-        'sm' => 991,
-        'md' => 1199,
-    ];
-
-    /**
-     * pre-defined lower breakpoints (min-width)
-     */
-    private static $MIN_WIDTHS = [
-        // Bootstrap breakpoints
-        'sm' => 768,
-        'md' => 992,
-        'ld' => 1200,
-    ];
 
     /**
      * Load the language file on instantiation. Note this is only available in Joomla 3.1 and higher.
@@ -246,8 +222,7 @@ class PlgSystemRimages extends JPlugin
     {
         if (filter_var( $widthName, FILTER_VALIDATE_INT ) === false)
         {
-            $widths = ($border === 'max') ? self::$MAX_WIDTHS : self::$MIN_WIDTHS;
-            return array_key_exists( $widthName, $widths ) ? $widths[$widthName] : null;
+            return PredefinedBreakpoints::getPredefinedWidth( $widthName, $border );
         }
         else
         {

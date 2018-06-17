@@ -18,6 +18,7 @@
     <filename plugin="rimages">rimages.php</filename>
     <filename>DomTreeTraverser.php</filename>
     <filename>HtmlHelper.php</filename>
+    <filename>PredefinedBreakpoints.php</filename>
     <filename>index.html</filename>
 
     <folder>forms</folder>
