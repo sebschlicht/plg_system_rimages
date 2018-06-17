@@ -7,6 +7,15 @@ require_once 'DomTreeTraverser.php';
 require_once 'HtmlHelper.php';
 require_once 'PredefinedBreakpoints.php';
 
+/**
+ * System plugin to make images on the website responsive.
+ * 
+ * Next to reducing the sizes of the original image - without modifying its dimensions - alternative versions are populated via the picture tag.
+ * This process heavily depends on the configuration of breakpoints, widths where alternative version of images should be used.
+ * The generation of alternative versions can be automated, based on ImageMagick.
+ * 
+ * Breakpoints are organized in packages which apply to a certain CSS selector and the respective set of matching image tags.
+ */
 class PlgSystemRimages extends JPlugin
 {
     /**
@@ -29,7 +38,7 @@ class PlgSystemRimages extends JPlugin
     protected $autoloadLanguage = true;
 
     /**
-     * Trigger the processing of content HTML code.
+     * Triggers the processing of content HTML code.
      *
      * @param   string   $context  The context of the content being passed to the plugin.
      * @param   mixed    &$row     An object with a "text" property
@@ -53,7 +62,7 @@ class PlgSystemRimages extends JPlugin
     }
 
     /**
-     * Trigger the processing of remaining images (neither content nor module) when in front-end, using the global configuration.
+     * Triggers the processing of remaining images (neither content nor module) when in front-end, using the global configuration.
      */
     public function onAfterRender()
     {
@@ -67,7 +76,7 @@ class PlgSystemRimages extends JPlugin
     }
     
     /**
-     * Process a pice of HTML markup code and returns the processed version.
+     * Processes a piece of HTML markup code and returns the processed version.
      * Processing, in this context, means to wrap images with a picture tag and add alternative version according to the configuration.
      * 
      * @param string $html HTML code to process
@@ -118,6 +127,15 @@ class PlgSystemRimages extends JPlugin
         return $imagesReplaced ? $dt->getHtml() : $html;
     }
 
+    /**
+     * Retrieves the sources of an image.
+     * This includes alternative versions for the configured breakpoints (source tags) alongside with the original image (img tag).
+     * 
+     * @param DOMNode $image image node
+     * @param array $breakpoints configured breakpoint package
+     * @param bool $doGenerateMissingSources flag whether to generate missing alternative version automatically (defaults to false)
+     * @return array list of sources (as HTML code)
+     */
     private function getAvailableSources( &$image, &$breakpoints, $doGenerateMissingSources = false )
     {
         // try to load image source
@@ -125,7 +143,8 @@ class PlgSystemRimages extends JPlugin
         if (!$src) return false;
 
         // extract path information from image source
-        $localBasePath = $this->extractPathInfo( $src );
+        $localBasePath = self::extractPathInfo( $src );
+        if (!$localBasePath) return false;
 
         // loop configured breakpoints
         $sources = [];
@@ -133,20 +152,22 @@ class PlgSystemRimages extends JPlugin
         {
             // load targeted viewport width
             $viewportWidth = $breakpoint[$breakpoint['type'] === '0' ? 'custom' : 'type'];
-            $viewportWidthValue = $this->getWidthValue( $viewportWidth, $breakpoint['border'] );
+            $viewportWidthValue = (filter_var( $viewportWidth, FILTER_VALIDATE_INT ) === false)
+                ? PredefinedBreakpoints::getPredefinedWidth( $viewportWidth, $breakpoint['border'] )
+                : $viewportWidth;
             if (!$viewportWidthValue) continue;
 
             // build path to respective responsive version
-            $srcResponsive = $this->buildFilePath( $localBasePath['directory'], $localBasePath['filename'], $viewportWidthValue );
+            $srcResponsive = self::buildFilePath( $localBasePath['directory'], $localBasePath['filename'], $viewportWidthValue );
 
             // generate the file if not available and automatic creation enabled
             if (!is_file( $srcResponsive ))
             {
                 // check if image generation is enabled and possible
-                if (!$doGenerateMissingSources || !$breakpoint['image'] || $localBasePath['isExternalUrl']) continue;
+                if (!$doGenerateMissingSources || !$breakpoint['image']) continue;
 
                 // build file path to original file and generate responsive version
-                $srcOriginal = $this->buildOriginalFilePath( $localBasePath['directory'], $localBasePath['filename'], $localBasePath['extension'] );
+                $srcOriginal = self::buildOriginalFilePath( $localBasePath['directory'], $localBasePath['filename'], $localBasePath['extension'] );
 
                 if (!self::isWritable( $srcResponsive ) || !self::generateImage( $srcOriginal, $srcResponsive, $breakpoint['image'] )) continue;
             }
@@ -166,7 +187,13 @@ class PlgSystemRimages extends JPlugin
         return $sources;
     }
 
-    private function extractPathInfo( $imgSrc )
+    /**
+     * Extracts the path information from an image source.
+     * 
+     * @param string $imgSrc image source (path or URL)
+     * @return array|bool path information to localize the image or false if the source attribute points at an external image
+     */
+    private static function extractPathInfo( $imgSrc )
     {
         // check if image source is path or URL
         if ( preg_match( '/^https?:/i', $imgSrc ) === 0 )
@@ -175,7 +202,6 @@ class PlgSystemRimages extends JPlugin
             $directory = $path['dirname'];
             $filename = $path['filename'];
             $extension = $path['extension'];
-            $isExternalUrl = false;
         }
         else
         {
@@ -192,25 +218,38 @@ class PlgSystemRimages extends JPlugin
             }
             else
             {
-                $directory = null;
-                $filename = null;
-                $extension = null;
+                return false;
             }
         }
         return [
             'directory' => $directory,
             'filename' => $filename,
             'extension' => $extension,
-            'isExternalUrl' => $isExternalUrl,
         ];
     }
 
-    private function buildFilePath( $directory, $filename, $width )
+    /**
+     * Builds the path to an alternative version of an image file.
+     * 
+     * @param string $directory directory of the file
+     * @param string $filename name of the file
+     * @param int $width width of the image
+     * @return string path to the alternative version of the image width the given width
+     */
+    private static function buildFilePath( $directory, $filename, $width )
     {
         return $directory . DIRECTORY_SEPARATOR . $filename . "_$width.jpg";
     }
 
-    private function buildOriginalFilePath( $directory, $filename, $extension )
+    /**
+     * Builds the path to the original version of an image file.
+     * 
+     * @param string $directory directory of the file
+     * @param string $filename name of the file
+     * @param string $extension file extension
+     * @return string path to the specified image
+     */
+    private static function buildOriginalFilePath( $directory, $filename, $extension )
     {
         // make absolute paths relative
         if (substr( $directory, 0, 1 ) === '/') $directory = substr( $directory, strlen( JURI::base( true ) ) + 1 );
@@ -218,21 +257,16 @@ class PlgSystemRimages extends JPlugin
         return JPATH_ROOT . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $filename . ".$extension";
     }
 
+    /**
+     * Checks whether a path is writable.
+     * If the given path is a file, it's checked whether its parental directory can be written.
+     * 
+     * @param string $path path to be checked
+     * @return bool true if the given path can be written, false otherwise
+     */
     private static function isWritable( $path )
     {
         return is_writable( is_dir( $path ) ? $path : dirname( $path ) );
-    }
-
-    private function getWidthValue( $widthName, $border )
-    {
-        if (filter_var( $widthName, FILTER_VALIDATE_INT ) === false)
-        {
-            return PredefinedBreakpoints::getPredefinedWidth( $widthName, $border );
-        }
-        else
-        {
-            return $widthName;
-        }
     }
 
     /**
