@@ -211,7 +211,6 @@ class PlgSystemRimages extends JPlugin
             }
             else
             {
-                // TODO? option to convert and store external images in a local folder
                 $directory = null;
                 $filename = null;
                 $extension = null;
@@ -227,7 +226,6 @@ class PlgSystemRimages extends JPlugin
 
     private function buildFilePath( $directory, $filename, $width )
     {
-        // TODO? support other image formats
         return $directory . DIRECTORY_SEPARATOR . $filename . "_$width.jpg";
     }
 
@@ -314,7 +312,6 @@ class PlgSystemRimages extends JPlugin
             $im->resizeImage( $maxWidth, $targetHeight, Imagick::FILTER_SINC, 1 );
         }
 
-        // TODO determine desired image format from target path, check for necessity if not JPG (e.g. transparent background)
         $im->setImageFormat( 'jpg' );
         $im->setImageCompression( Imagick::COMPRESSION_JPEG );
         $im->setImageCompressionQuality( 85 );
