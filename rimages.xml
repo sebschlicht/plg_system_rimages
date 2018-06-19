@@ -1,7 +1,7 @@
 <extension version="3.2" type="plugin" group="system" method="upgrade">
   <name>PLG_SYSTEM_RIMAGES</name>
   <description>PLG_SYSTEM_RIMAGES_XML_DESCRIPTION</description>
-  <version>0.0.2</version>
+  <version>0.0.3</version>
 
   <author>Sebastian Schlicht</author>
   <creationDate>Jun 2018</creationDate>
@@ -17,6 +17,7 @@
   <files>
     <filename plugin="rimages">rimages.php</filename>
     <filename>DomTreeTraverser.php</filename>
+    <filename>FileHelper.php</filename>
     <filename>HtmlHelper.php</filename>
     <filename>PredefinedBreakpoints.php</filename>
     <filename>index.html</filename>
@@ -41,6 +42,18 @@
           <option value="1">JYES</option>
           <option value="0">JNO</option>
         </field>
+        <field type="text" name="replica_root"
+          label="PLG_SYSTEM_RIMAGES_CFG_REPLICA_ROOT_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_REPLICA_ROOT_DESC"
+          showon="generate_images:1" default="images/rimages"/>
+        <field type="radio" name="download_images"
+          label="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_DESC"
+          showon="generate_images:1" class="btn-group btn-group-yesno" default="0">
+          <option value="1">JYES</option>
+          <option value="0">JNO</option>
+        </field>
+        <field type="number" name="cache_images"
+          label="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_DESC"
+          showon="download_images:1" default="1440"/>
       </fieldset>
       <fieldset name="global">
         <field type="text" name="global_selector1"
