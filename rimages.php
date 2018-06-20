@@ -14,20 +14,25 @@ if (!defined( 'JPATH_TMP' ))
     define( 'JPATH_TMP', JPATH_ROOT . '/tmp');
 }
 
-// set up a logger
+// set up a file logger
 JLog::addLogger(
     array(
-         // Sets file name
-         'text_file' => 'plg_system_rimages.log.php',
-         'logger' => 'messagequeue'
+         'text_file' => 'plg_system_rimages.log.php'
     ),
-        // Sets messages of all log levels to be sent to the file
-    JLog::ALL,
-        // The log category/categories which should be recorded in this file
-        // In this case, it's just the one category from our extension, still
-        // we need to put it inside an array
+    JLog::WARNING,
     array('rimages')
 );
+if (JDEBUG)
+{
+    // set up an on-screen logger for debugging
+    JLog::addLogger(
+        array(
+            'logger' => 'messagequeue'
+        ),
+        JLog::ALL,
+        array('rimages')
+    );
+}
 
 /**
  * System plugin to make images on the website responsive.
@@ -172,11 +177,6 @@ class PlgSystemRimages extends JPlugin
             JLog::add( "Processing local image: $src", JLog::DEBUG, 'rimages' );
             $relFile = FileHelper::getLocalPath( $src );
             $orgFile = JPATH_ROOT . "/$relFile";
-            if (!FileHlper::isPathWithin( $orgFile, JPATH_ROOT ))
-            {
-                JLog::add( "Original image path is outside of system boundaries!", JLog::WARNING, 'rimages' );
-                return false;
-            }
 
             if(!is_file( $orgFile ))
             {
@@ -190,9 +190,9 @@ class PlgSystemRimages extends JPlugin
             JLog::add( "Processing remote image: $src", JLog::DEBUG, 'rimages' );
             $relFile = FileHelper::buildRelativePathFromUrl( $src );
             $orgFile = JPATH_TMP . "/$relFile";
-            if (!FileHlper::isPathWithin( $orgFile, JPATH_TMP ))
+            if (!FileHelper::isPathWithin( $orgFile, JPATH_TMP ))
             {
-                JLog::add( "Original image path is outside of system boundaries!", JLog::WARNING, 'rimages' );
+                JLog::add( "Original image path '$orgFile' is outside of system boundaries!", JLog::WARNING, 'rimages' );
                 return false;
             }
 
@@ -200,6 +200,11 @@ class PlgSystemRimages extends JPlugin
             if (!is_file( $orgFile ) || !$this->isCacheValid( $src ))
             {
                 JLog::add( "Downloading remote image to '$orgFile'...", JLog::DEBUG, 'rimages' );
+                if (!JFolder::create( dirname( $orgFile ) ))
+                {
+                    JLog::add( "Failed to create download target folder for '$orgFile'!", JLog::WARNING, 'rimages' );
+                    return false;
+                }
                 if (!FileHelper::downloadFile( $src, $orgFile ))
                 {
                     JLog::add( "Failed to download remote image '$src' to '$orgFile'!", JLog::WARNING, 'rimages' );
@@ -219,11 +224,12 @@ class PlgSystemRimages extends JPlugin
         
         // build replica directory
         $replicaRoot = rtrim( $this->params->get( 'replica_root', 'images/rimages' ), '/' );
+        $replicaRootDir = JPATH_ROOT . "/$replicaRoot";
         $replicaSrc = "$replicaRoot/$relFile";
         $replicaDir = JPATH_ROOT . "/$replicaSrc";
-        if (!FileHelper::isPathWithin( $replicaDir, JPATH_ROOT . "/$replicaRoot" ))
+        if (!FileHelper::isPathWithin( $replicaDir, $replicaRootDir ))
         {
-            JLog::add( "Replica path is outside of system boundaries!", JLog::WARNING, 'rimages' );
+            JLog::add( "Replica path '$replicaDir' is outside of system boundaries '$replicaRootDir'!", JLog::WARNING, 'rimages' );
             return false;
         }
         JLog::add( "Replica folder (short): $replicaSrc", JLog::DEBUG, 'rimages' );
@@ -265,9 +271,17 @@ class PlgSystemRimages extends JPlugin
                     }
                     if (self::isWritable( $replicaDir ))
                     {
-                        if (!self::generateImage( $orgFile, $srcResponsive, $breakpoint['image'] ))
+                        try
                         {
-                            JLog::add( "Failed to generate missing version '$srcResponsive'!", JLog::ERROR, 'rimages' );
+                            if (!self::generateImage( $orgFile, $srcResponsive, $breakpoint['image'] ))
+                            {
+                                JLog::add( "Failed to generate missing version '$srcResponsive'!", JLog::ERROR, 'rimages' );
+                                continue;
+                            }
+                        }
+                        catch (Exception $e)
+                        {
+                            JLog::add( "Failed to generate missing version '$srcResponsive': {$e->getMessage()}!", JLog::ERROR, 'rimages' );
                             continue;
                         }
                     }
@@ -297,6 +311,11 @@ class PlgSystemRimages extends JPlugin
         array_push( $sources, HtmlHelper::buildSimpleTag( 'img', HtmlHelper::getNodeAttributes( $image ) ) );
 
         return $sources;
+    }
+
+    private function isCacheValid( $src )
+    {
+        return false;
     }
 
     /**
@@ -367,8 +386,7 @@ class PlgSystemRimages extends JPlugin
      */
     private static function generateImage( $source, $target, $maxWidth )
     {
-        $im = new Imagick();
-        $im->readImage( $source );
+        $im = new Imagick( $source );
         $im = $im->mergeImageLayers( Imagick::LAYERMETHOD_FLATTEN );
 
         $im->stripImage();
