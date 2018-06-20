@@ -140,15 +140,8 @@ class PlgSystemRimages extends JPlugin
 
         // process configured breakpoint packages
         $imagesReplaced = false;
-        $canGenerateImages = extension_loaded( 'imagick' );
-        $globalGenerateImages = $this->params->get( 'generate_images', false );
-        $generateImages = false;
         foreach ($breakpointPackages as $breakpointPackage)
         {
-            // check if image generation enabled
-            $generateImages = $canGenerateImages
-                && array_key_exists( 'generate_images', $breakpointPackage) ? $breakpointPackage['generate_images'] : $globalGenerateImages;
-
             // find matching non-responsive images
             $images = $dt->find( $breakpointPackage['selector'] );
             $images = $dt->remove( $images, 'picture img' );
@@ -157,7 +150,7 @@ class PlgSystemRimages extends JPlugin
             // process specified images
             foreach ($images as $image)
             {
-                $sources = $this->getAvailableSources( $image, $breakpointPackage['breakpoints'], $generateImages );
+                $sources = $this->getAvailableSources( $image, $breakpointPackage );
                 if ($sources)
                 {
                     // inject picture tag
@@ -174,15 +167,16 @@ class PlgSystemRimages extends JPlugin
      * This includes alternative versions for the configured breakpoints (source tags) alongside with the original image (img tag).
      * 
      * @param DOMNode $image image node
-     * @param array $breakpoints configured breakpoint package
-     * @param bool $doGenerateMissingSources flag whether to generate missing alternative version automatically (defaults to false)
+     * @param array $breakpointPackage configured breakpoint package
      * @return array list of sources (as HTML code)
      */
-    private function getAvailableSources( &$image, &$breakpoints, $doGenerateMissingSources = false )
+    private function getAvailableSources( &$image, &$breakpointPackage )
     {
         // try to load image source
         $src = $image->hasAttribute( 'src' ) ? $image->getAttribute( 'src' ) : false;
         if (!$src) return false;
+
+        $doGenerateImages = $this->getPackageGenerateImages( $breakpointPackage );
 
         // load local image
         $doDownloadExternalImages = $this->params->get( 'download_images', false );
@@ -211,7 +205,7 @@ class PlgSystemRimages extends JPlugin
             }
 
             // download the external image if missing or obsolete
-            if (!is_file( $orgFile ) || !$this->isCacheValid( $src ))
+            if ($doGenerateImages && !is_file( $orgFile ) || !$this->isCacheValid( $src ))
             {
                 JLog::add( "Downloading remote image to '$orgFile'...", JLog::DEBUG, 'rimages' );
                 if (!JFolder::create( dirname( $orgFile ) ))
@@ -255,24 +249,21 @@ class PlgSystemRimages extends JPlugin
         
         // loop configured breakpoints
         $sources = [];
-        foreach( $breakpoints as $breakpoint)
+        foreach( $breakpointPackage['breakpoints'] as $breakpoint)
         {
             // load targeted viewport width
-            $viewportWidth = $breakpoint[$breakpoint['type'] === '0' ? 'custom' : 'type'];
-            $viewportWidthValue = (filter_var( $viewportWidth, FILTER_VALIDATE_INT ) === false)
-                ? PredefinedBreakpoints::getPredefinedWidth( $viewportWidth, $breakpoint['border'] )
-                : $viewportWidth;
-            if (!$viewportWidthValue) continue;
+            $viewportWidth = self::getBreakpointWidth( $breakpoint );
+            if (!$viewportWidth) continue;
 
             // build path to respective responsive version
-            $srcResponsive = "$replicaSrc/" . self::buildResponsiveImageFilename( $pathInfo, $viewportWidthValue );
-            JLog::add( "Responsive image version $viewportWidthValue: $srcResponsive", JLog::DEBUG, 'rimages' );
+            $srcResponsive = "$replicaSrc/" . self::buildResponsiveImageFilename( $pathInfo, $viewportWidth );
+            JLog::add( "Responsive image version $viewportWidth: $srcResponsive", JLog::DEBUG, 'rimages' );
 
             // generate the file if not available and automatic creation enabled
             if (!is_file( $srcResponsive ))
             {
                 // check if image generation enabled and width provided
-                if ($doGenerateMissingSources && $breakpoint['image'])
+                if ($doGenerateImages && $breakpoint['imageWidth'])
                 {
                     if (!is_dir( $replicaDir ))
                     {
@@ -286,7 +277,7 @@ class PlgSystemRimages extends JPlugin
                     {
                         try
                         {
-                            if (!self::generateImage( $orgFile, $srcResponsive, $breakpoint['image'] ))
+                            if (!self::generateImage( $orgFile, $srcResponsive, $breakpoint['imageWidth'] ))
                             {
                                 JLog::add( "Failed to generate missing version '$srcResponsive'!", JLog::ERROR, 'rimages' );
                                 continue;
@@ -313,9 +304,9 @@ class PlgSystemRimages extends JPlugin
 
             // build and add source tag
             $sourceTag = HtmlHelper::buildSimpleTag( 'source', [
-                'media' => '(' . ($breakpoint['border'] === 'max' ? 'max' : 'min') . "-width: {$viewportWidthValue}px)",
+                'media' => "(max-width: {$viewportWidth}px)",
                 'srcset' => $srcResponsive,
-                'data-rimages-w' => $viewportWidthValue,
+                'data-rimages-w' => $viewportWidth,
             ] );
             array_push( $sources, $sourceTag );
         }
@@ -324,6 +315,27 @@ class PlgSystemRimages extends JPlugin
         array_push( $sources, HtmlHelper::buildSimpleTag( 'img', HtmlHelper::getNodeAttributes( $image ) ) );
 
         return $sources;
+    }
+
+    /**
+     * Retrieves the generate images flag of a package, that is either globally configured value or its package override.
+     * The flag will always be false if the ImageMagick extension isn't available.
+     * 
+     * @param array $breakpointPackage breakpoint package
+     * @param bool generate images flag to be applied to the package
+     */
+    private function getPackageGenerateImages( &$breakpointPackage )
+    {
+        return extension_loaded( 'imagick' ) && (array_key_exists( 'generate_images', $breakpointPackage )
+            ? $breakpointPackage['generate_images'] : $this->params->get( 'generate_images', false ));
+    }
+
+    private static function getBreakpointWidth( &$breakpoint )
+    {
+        $widthName = $breakpoint['width'] !== '0' ? $breakpoint['width'] : $breakpoint['customWidth'];
+        return (filter_var( $widthName, FILTER_VALIDATE_INT ) === false)
+            ? PredefinedBreakpoints::getPredefinedWidth( $widthName )
+            : $widthName;
     }
 
     /**
@@ -411,6 +423,11 @@ class PlgSystemRimages extends JPlugin
     private function loadBreakpointPackages( $fieldPrefix )
     {
         $castToArray = function( $o ) { return (array) $o; };
+        $sortBreakpoints = function( $b1, $b2 ) {
+            $width1 = self::getBreakpointWidth( $b1 );
+            $width2 = self::getBreakpointWidth( $b2 );
+            return $width1 < $width2 ? -1 : ($width1 > $width2 ? 1 : 0); 
+        };
 
         // search for tuples of selector and breakpoints as long as such tuples are available
         $packages = [];
@@ -423,13 +440,15 @@ class PlgSystemRimages extends JPlugin
 
             if ($selector && $breakpoints)
             {
-                // build and add breakpoint package
+                // build breakpoint package
                 $package = [
                     'selector' => $selector,
                     'breakpoints' => array_map( $castToArray, array_values( (array) $breakpoints ) ),
                 ];
                 if ($generateImages !== null) $package['generate_images'] = $generateImages;
 
+                // add package with sorted breakpoints
+                usort( $package['breakpoints'], $sortBreakpoints );
                 array_push( $packages, $package );
             }
         }

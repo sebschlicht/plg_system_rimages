@@ -70,11 +70,11 @@
         </field>
         <field type="number" name="cache_images"
           label="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_DESC"
-          showon="download_images:1" default="1440"/>
+          showon="generate_images:1[AND]download_images:1" default="1440"/>
       </fieldset>
       <fieldset name="global">
         <field type="text" name="global_selector1"
-          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR1_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
         <field type="list" name="global_generate_images1"
           label="PLG_SYSTEM_RIMAGES_CFG_PACKAGE_GENERATE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_PACKAGE_GENERATE_IMAGES_DESC"
           useglobal="true" class="chzn-color">
@@ -88,7 +88,7 @@
       </fieldset>
       <fieldset name="content">
         <field type="text" name="content_selector1"
-          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR1_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
         <field type="subform" name="content_breakpoints1"
           label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
           formsource="/plugins/system/rimages/forms/breakpoint.xml"

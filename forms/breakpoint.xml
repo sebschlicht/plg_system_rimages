@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form>
-  <field name="border" type="list"
-    label="PLG_SYSTEM_RIMAGES_BREAKPOINT_BORDER_LABEL" description="PLG_SYSTEM_RIMAGES_BREAKPOINT_BORDER_DESC">
-    <option value="min">PLG_SYSTEM_RIMAGES_BREAKPOINT_BORDER_MIN</option>
-    <option value="max">PLG_SYSTEM_RIMAGES_BREAKPOINT_BORDER_MAX</option>
-  </field>
-  <field name="type" type="groupedlist"
+  <field name="width" type="groupedlist"
     label="PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_LABEL" description="PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_DESC">
     <option value="0">PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_CUSTOM</option>
     <group label="PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_BOOTSTRAP">
@@ -15,9 +10,9 @@
       <option value="ld">PLG_SYSTEM_RIMAGES_BREAKPOINT_BOOTSTRAP_LD</option>
     </group>
   </field>
-  <field name="custom" type="number"
+  <field name="customWidth" type="number"
     label="PLG_SYSTEM_RIMAGES_BREAKPOINT_CUSTOM_LABEL" description="PLG_SYSTEM_RIMAGES_BREAKPOINT_CUSTOM_DESC"
-    showon="type:0"/>
-  <field name="image" type="number"
+    showon="width:0"/>
+  <field name="imageWidth" type="number"
     label="PLG_SYSTEM_RIMAGES_BREAKPOINT_IMAGE_LABEL" description="PLG_SYSTEM_RIMAGES_BREAKPOINT_IMAGE_DESC"/>
 </form>
