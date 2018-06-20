@@ -53,15 +53,15 @@
   <config>
     <fields name="params" addfieldpath="plugins/system/rimages/fields">
       <fieldset name="basic">
+        <field type="text" name="replica_root"
+          label="PLG_SYSTEM_RIMAGES_CFG_REPLICA_ROOT_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_REPLICA_ROOT_DESC"
+          default="images/rimages"/>
         <field type="radio" name="generate_images"
           label="PLG_SYSTEM_RIMAGES_CFG_GENERATE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GENERATE_IMAGES_DESC"
           class="btn-group btn-group-yesno" default="0">
           <option value="1">JYES</option>
           <option value="0">JNO</option>
         </field>
-        <field type="text" name="replica_root"
-          label="PLG_SYSTEM_RIMAGES_CFG_REPLICA_ROOT_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_REPLICA_ROOT_DESC"
-          showon="generate_images:1" default="images/rimages"/>
         <field type="radio" name="download_images"
           label="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_DESC"
           showon="generate_images:1" class="btn-group btn-group-yesno" default="0">
