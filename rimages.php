@@ -9,6 +9,11 @@ require_once 'FileHelper.php';
 require_once 'HtmlHelper.php';
 require_once 'PredefinedBreakpoints.php';
 
+if (!defined( 'JPATH_TMP' ))
+{
+    define( 'JPATH_TMP', JPATH_ROOT . '/tmp');
+}
+
 // set up a logger
 JLog::addLogger(
     array(
@@ -166,7 +171,12 @@ class PlgSystemRimages extends JPlugin
         {
             JLog::add( "Processing local image: $src", JLog::DEBUG, 'rimages' );
             $relFile = FileHelper::getLocalPath( $src );
-            $orgFile = JPATH_ROOT . DIRECTORY_SEPARATOR . $relFile;
+            $orgFile = JPATH_ROOT . "/$relFile";
+            if (!FileHlper::isPathWithin( $orgFile, JPATH_ROOT ))
+            {
+                JLog::add( "Original image path is outside of system boundaries!", JLog::WARNING, 'rimages' );
+                return false;
+            }
 
             if(!is_file( $orgFile ))
             {
@@ -179,7 +189,12 @@ class PlgSystemRimages extends JPlugin
         {
             JLog::add( "Processing remote image: $src", JLog::DEBUG, 'rimages' );
             $relFile = FileHelper::buildRelativePathFromUrl( $src );
-            $orgFile = JPATH_ROOT . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . $relFile;
+            $orgFile = JPATH_TMP . "/$relFile";
+            if (!FileHlper::isPathWithin( $orgFile, JPATH_TMP ))
+            {
+                JLog::add( "Original image path is outside of system boundaries!", JLog::WARNING, 'rimages' );
+                return false;
+            }
 
             // download the external image if missing or obsolete
             if (!is_file( $orgFile ) || !$this->isCacheValid( $src ))
@@ -203,9 +218,14 @@ class PlgSystemRimages extends JPlugin
         JLog::add( "Original image path: $orgFile", JLog::DEBUG, 'rimages' );
         
         // build replica directory
-        $replicaRoot = rtrim( $this->params->get( 'replica_root', 'images/rimages' ), DIRECTORY_SEPARATOR );
-        $replicaSrc = $replicaRoot . DIRECTORY_SEPARATOR . $relFile;
-        $replicaDir = JPATH_ROOT . DIRECTORY_SEPARATOR . $replicaSrc;
+        $replicaRoot = rtrim( $this->params->get( 'replica_root', 'images/rimages' ), '/' );
+        $replicaSrc = "$replicaRoot/$relFile";
+        $replicaDir = JPATH_ROOT . "/$replicaSrc";
+        if (!FileHelper::isPathWithin( $replicaDir, JPATH_ROOT . "/$replicaRoot" ))
+        {
+            JLog::add( "Replica path is outside of system boundaries!", JLog::WARNING, 'rimages' );
+            return false;
+        }
         JLog::add( "Replica folder (short): $replicaSrc", JLog::DEBUG, 'rimages' );
 
         // load file info
@@ -225,7 +245,7 @@ class PlgSystemRimages extends JPlugin
             if (!$viewportWidthValue) continue;
 
             // build path to respective responsive version
-            $srcResponsive = $replicaSrc . DIRECTORY_SEPARATOR . self::buildResponsiveImageFilename( $pathInfo, $viewportWidthValue );
+            $srcResponsive = "$replicaSrc/" . self::buildResponsiveImageFilename( $pathInfo, $viewportWidthValue );
             JLog::add( "Responsive image version $viewportWidthValue: $srcResponsive", JLog::DEBUG, 'rimages' );
 
             // generate the file if not available and automatic creation enabled
