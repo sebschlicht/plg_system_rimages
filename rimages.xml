@@ -1,7 +1,7 @@
 <extension version="3.2" type="plugin" group="system" method="upgrade">
   <name>PLG_SYSTEM_RIMAGES</name>
   <description>PLG_SYSTEM_RIMAGES_XML_DESCRIPTION</description>
-  <version>0.0.3</version>
+  <version>0.0.5</version>
 
   <author>Sebastian Schlicht</author>
   <creationDate>Jun 2018</creationDate>
@@ -14,6 +14,22 @@
     <server type="extension" name="Responsive Images Plugin Updates">http://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
   </updateservers>
 
+  <install> <!-- Runs on install -->
+    <sql>
+      <file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+    </sql>
+  </install>
+  <uninstall> <!-- Runs on uninstall -->
+    <sql>
+      <file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+    </sql>
+  </uninstall>
+  <update> <!-- Runs on update; New since J2.5 -->
+    <schemas>
+      <schemapath type="mysql">sql/updates/mysql</schemapath>
+    </schemas>
+  </update>
+
   <files>
     <filename plugin="rimages">rimages.php</filename>
     <filename>DomTreeTraverser.php</filename>
@@ -24,6 +40,7 @@
 
     <folder>forms</folder>
     <folder>language</folder>
+    <folder>sql</folder>
   </files>
 
   <languages folder="language">

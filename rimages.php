@@ -57,6 +57,11 @@ class PlgSystemRimages extends JPlugin
     private static $CFG_CONTENT = 'content';
 
     /**
+     * database table name for external images
+     */
+    private static $DB_EXTERNAL_IMAGES = '#__rimages_externalimages';
+
+    /**
      * Load the language file on instantiation. Note this is only available in Joomla 3.1 and higher.
      * If you want to support 3.0 series you must override the constructor
      *
@@ -64,6 +69,14 @@ class PlgSystemRimages extends JPlugin
      * @since  3.1
      */
     protected $autoloadLanguage = true;
+
+    /**
+     * Database object
+     *
+     * @var    JDatabaseDriver
+     * @since  3.3
+     */
+    protected $db;
 
     /**
      * Triggers the processing of content HTML code.
@@ -313,9 +326,54 @@ class PlgSystemRimages extends JPlugin
         return $sources;
     }
 
+    /**
+     * Checks whether an image has to be re-downloaded as its caching duration expired.
+     * If the image wasn't cached before, a caching entry will be created and stored.
+     * If the caching duration is expired, the respective caching entry will be updated immediately.
+     * 
+     * @param string $src image source
+     * @return bool true if the image's caching duration hasn't expired yet, false otherwise
+     */
     private function isCacheValid( $src )
     {
-        return false;
+        $hash = sha1( $src );
+        $cachingDuration = $this->params->get( 'cache_images', 1440 );
+
+        // look for cache entry
+        $query = $this->db->getQuery( true )
+            ->select( $this->db->quoteName( 'timestamp' ) )
+            ->from( $this->db->quoteName( self::$DB_EXTERNAL_IMAGES ) )
+            ->where( $this->db->quoteName( 'imgid' ) . " = '$hash'" );
+        
+        $this->db->setQuery( $query );
+        $timestamp = $this->db->loadResult();
+
+        // build object
+        $co = new stdClass();
+        $co->imgid = $hash;
+        $co->timestamp = $timestamp ? $timestamp : date('Y-m-d H:i:s');
+
+        // check if cached image obsolete, update if necessary
+        if ($timestamp)
+        {
+            $dt = DateTime::createFromFormat( 'Y-m-d H:i:s', $co->timestamp );
+            if ( $dt->modify( "+$cachingDuration minutes" ) < new DateTime() )
+            {
+                $co->timestamp = date('Y-m-d H:i:s');
+                $this->db->updateObject( self::$DB_EXTERNAL_IMAGES, $co, 'imgid' );
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        // store cache entry
+        else
+        {
+            $this->db->insertObject( self::$DB_EXTERNAL_IMAGES, $co, 'imgid' );
+            return false;
+        }
     }
 
     /**
