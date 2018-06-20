@@ -4,6 +4,7 @@
 defined( '_JEXEC' ) or die;
 
 // dependencies
+jimport('joomla.filesystem.folder');
 require_once 'DomTreeTraverser.php';
 require_once 'FileHelper.php';
 require_once 'HtmlHelper.php';
@@ -260,7 +261,6 @@ class PlgSystemRimages extends JPlugin
                 // check if image generation enabled and width provided
                 if ($doGenerateMissingSources && $breakpoint['image'])
                 {
-                    jimport('joomla.filesystem.folder');
                     if (!is_dir( $replicaDir ))
                     {
                         if (!JFolder::create( $replicaDir ))
