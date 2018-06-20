@@ -3,9 +3,37 @@
 // no direct access
 defined( '_JEXEC' ) or die;
 
+// dependencies
+jimport('joomla.filesystem.folder');
 require_once 'DomTreeTraverser.php';
+require_once 'FileHelper.php';
 require_once 'HtmlHelper.php';
 require_once 'PredefinedBreakpoints.php';
+
+if (!defined( 'JPATH_TMP' ))
+{
+    define( 'JPATH_TMP', JPATH_ROOT . '/tmp');
+}
+
+// set up a file logger
+JLog::addLogger(
+    array(
+         'text_file' => 'plg_system_rimages.log.php'
+    ),
+    JLog::WARNING,
+    array('rimages')
+);
+if (JDEBUG)
+{
+    // set up an on-screen logger for debugging
+    JLog::addLogger(
+        array(
+            'logger' => 'messagequeue'
+        ),
+        JLog::ALL,
+        array('rimages')
+    );
+}
 
 /**
  * System plugin to make images on the website responsive.
@@ -143,10 +171,75 @@ class PlgSystemRimages extends JPlugin
         $src = $image->hasAttribute( 'src' ) ? $image->getAttribute( 'src' ) : false;
         if (!$src) return false;
 
-        // extract path information from image source
-        $localBasePath = self::extractPathInfo( $src );
-        if (!$localBasePath) return false;
+        // load local image
+        $doDownloadExternalImages = $this->params->get( 'download_images', false );
+        if (!FileHelper::isExternalUrl( $src ))
+        {
+            JLog::add( "Processing local image: $src", JLog::DEBUG, 'rimages' );
+            $relFile = FileHelper::getLocalPath( $src );
+            $orgFile = JPATH_ROOT . "/$relFile";
 
+            if(!is_file( $orgFile ))
+            {
+                JLog::add( "Image file '$relFile' is missing!", JLog::WARNING, 'rimages' );
+                return false;
+            }
+        }
+        // load external image
+        elseif ($doDownloadExternalImages)
+        {
+            JLog::add( "Processing remote image: $src", JLog::DEBUG, 'rimages' );
+            $relFile = FileHelper::buildRelativePathFromUrl( $src );
+            $orgFile = JPATH_TMP . "/$relFile";
+            if (!FileHelper::isPathWithin( $orgFile, JPATH_TMP ))
+            {
+                JLog::add( "Original image path '$orgFile' is outside of system boundaries!", JLog::WARNING, 'rimages' );
+                return false;
+            }
+
+            // download the external image if missing or obsolete
+            if (!is_file( $orgFile ) || !$this->isCacheValid( $src ))
+            {
+                JLog::add( "Downloading remote image to '$orgFile'...", JLog::DEBUG, 'rimages' );
+                if (!JFolder::create( dirname( $orgFile ) ))
+                {
+                    JLog::add( "Failed to create download target folder for '$orgFile'!", JLog::WARNING, 'rimages' );
+                    return false;
+                }
+                if (!FileHelper::downloadFile( $src, $orgFile ))
+                {
+                    JLog::add( "Failed to download remote image '$src' to '$orgFile'!", JLog::WARNING, 'rimages' );
+                    return false;
+                }
+            }
+        }
+        // ignore external image
+        else
+        {
+            JLog::add( "Skipping remote image: $src", JLog::DEBUG, 'rimages' );
+            return false;
+        }
+
+        JLog::add( "Relative image path: $relFile", JLog::DEBUG, 'rimages' );
+        JLog::add( "Original image path: $orgFile", JLog::DEBUG, 'rimages' );
+        
+        // build replica directory
+        $replicaRoot = rtrim( $this->params->get( 'replica_root', 'images/rimages' ), '/' );
+        $replicaRootDir = JPATH_ROOT . "/$replicaRoot";
+        $replicaSrc = "$replicaRoot/$relFile";
+        $replicaDir = JPATH_ROOT . "/$replicaSrc";
+        if (!FileHelper::isPathWithin( $replicaDir, $replicaRootDir ))
+        {
+            JLog::add( "Replica path '$replicaDir' is outside of system boundaries '$replicaRootDir'!", JLog::WARNING, 'rimages' );
+            return false;
+        }
+        JLog::add( "Replica folder (short): $replicaSrc", JLog::DEBUG, 'rimages' );
+
+        // load file info
+        $pathInfo = pathinfo( $relFile );
+        $filename = $pathInfo['filename'];
+        $extension = $pathInfo['extension'];
+        
         // loop configured breakpoints
         $sources = [];
         foreach( $breakpoints as $breakpoint)
@@ -159,18 +252,50 @@ class PlgSystemRimages extends JPlugin
             if (!$viewportWidthValue) continue;
 
             // build path to respective responsive version
-            $srcResponsive = self::buildFilePath( $localBasePath['directory'], $localBasePath['filename'], $viewportWidthValue );
+            $srcResponsive = "$replicaSrc/" . self::buildResponsiveImageFilename( $pathInfo, $viewportWidthValue );
+            JLog::add( "Responsive image version $viewportWidthValue: $srcResponsive", JLog::DEBUG, 'rimages' );
 
             // generate the file if not available and automatic creation enabled
             if (!is_file( $srcResponsive ))
             {
-                // check if image generation is enabled and possible
-                if (!$doGenerateMissingSources || !$breakpoint['image']) continue;
-
-                // build file path to original file and generate responsive version
-                $srcOriginal = self::buildOriginalFilePath( $localBasePath['directory'], $localBasePath['filename'], $localBasePath['extension'] );
-
-                if (!self::isWritable( $srcResponsive ) || !self::generateImage( $srcOriginal, $srcResponsive, $breakpoint['image'] )) continue;
+                // check if image generation enabled and width provided
+                if ($doGenerateMissingSources && $breakpoint['image'])
+                {
+                    if (!is_dir( $replicaDir ))
+                    {
+                        if (!JFolder::create( $replicaDir ))
+                        {
+                            JLog::add( "Failed to create replica folder '$replicaDir'!", JLog::ERROR, 'rimages' );
+                            continue;
+                        }
+                    }
+                    if (self::isWritable( $replicaDir ))
+                    {
+                        try
+                        {
+                            if (!self::generateImage( $orgFile, $srcResponsive, $breakpoint['image'] ))
+                            {
+                                JLog::add( "Failed to generate missing version '$srcResponsive'!", JLog::ERROR, 'rimages' );
+                                continue;
+                            }
+                        }
+                        catch (Exception $e)
+                        {
+                            JLog::add( "Failed to generate missing version '$srcResponsive': {$e->getMessage()}!", JLog::ERROR, 'rimages' );
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        JLog::add( "Failed to access replica folder at '$replicaDir'!", JLog::ERROR, 'rimages' );
+                        continue;
+                    }
+                }
+                else
+                {
+                    JLog::add( "Automatic image generation disabled or target width undefined!", JLog::DEBUG, 'rimages' );
+                    continue;
+                }
             }
 
             // build and add source tag
@@ -188,74 +313,21 @@ class PlgSystemRimages extends JPlugin
         return $sources;
     }
 
-    /**
-     * Extracts the path information from an image source.
-     * 
-     * @param string $imgSrc image source (path or URL)
-     * @return array|bool path information to localize the image or false if the source attribute points at an external image
-     */
-    private static function extractPathInfo( $imgSrc )
+    private function isCacheValid( $src )
     {
-        // check if image source is path or URL
-        if ( preg_match( '/^https?:/i', $imgSrc ) === 0 )
-        {
-            $path = pathinfo( $imgSrc );
-            $directory = $path['dirname'];
-            $filename = $path['filename'];
-            $extension = $path['extension'];
-        }
-        else
-        {
-            $url = parse_url( $imgSrc );
-            $isExternalUrl = ($url['host'] !== $_SERVER['HTTP_HOST']);
-
-            if (!$isExternalUrl)
-            {
-                // convert URL to local path
-                $path = pathinfo( $url['path'] );
-                $directory = substr( $path['dirname'], strlen( JUri::base( true ) ) + 1 );
-                $filename = $path['filename'];
-                $extension = $path['extension'];
-            }
-            else
-            {
-                return false;
-            }
-        }
-        return [
-            'directory' => $directory,
-            'filename' => $filename,
-            'extension' => $extension,
-        ];
+        return false;
     }
 
     /**
-     * Builds the path to an alternative version of an image file.
+     * Builds the file name of the responsive version of an image.
      * 
-     * @param string $directory directory of the file
-     * @param string $filename name of the file
-     * @param int $width width of the image
-     * @return string path to the alternative version of the image width the given width
+     * @param array $pathInfo path info of the original image
+     * @param int $width (optional) image width for a width suffix, leave out to refer to the original size
+     * @return string file name for the responsive image version in the specified size
      */
-    private static function buildFilePath( $directory, $filename, $width )
+    private static function buildResponsiveImageFilename( &$pathInfo, $width = null )
     {
-        return $directory . DIRECTORY_SEPARATOR . $filename . "_$width.jpg";
-    }
-
-    /**
-     * Builds the path to the original version of an image file.
-     * 
-     * @param string $directory directory of the file
-     * @param string $filename name of the file
-     * @param string $extension file extension
-     * @return string path to the specified image
-     */
-    private static function buildOriginalFilePath( $directory, $filename, $extension )
-    {
-        // make absolute paths relative
-        if (substr( $directory, 0, 1 ) === '/') $directory = substr( $directory, strlen( JURI::base( true ) ) + 1 );
-
-        return JPATH_ROOT . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $filename . ".$extension";
+        return $pathInfo['filename'] . ($width !== null ? "_$width" : '') . '.jpg';
     }
 
     /**
@@ -314,8 +386,7 @@ class PlgSystemRimages extends JPlugin
      */
     private static function generateImage( $source, $target, $maxWidth )
     {
-        $im = new Imagick();
-        $im->readImage( $source );
+        $im = new Imagick( $source );
         $im = $im->mergeImageLayers( Imagick::LAYERMETHOD_FLATTEN );
 
         $im->stripImage();
