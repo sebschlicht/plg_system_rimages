@@ -85,7 +85,10 @@ class FileHelper
         $parts = parse_url( $url );
         if (!$parts) return false;
 
-        return $parts['host'] . $parts['path'] . '/' . sha1( $parts['query'] . '#' . $parts['fragment'] );
+        $qf = (array_key_exists( 'query', $parts ) ? $parts['query'] : '')
+            . (array_key_exists( 'fragment', $parts ) ? '#' . $parts['fragment'] : '');
+
+        return $parts['host'] . $parts['path'] . ($qf !== '' ? '/' . sha1( $qf ) : '');
     }
 
     /**
@@ -97,12 +100,11 @@ class FileHelper
      */
     public static function downloadFile( $url, $path )
     {
-        return file_put_contents( $path, fopen( $url, 'r' ) );
+        return copy( $url, $path );
     }
 
     /**
      * Checks whether a path lies within a certain directory.
-     * The given path will be expanded to its real path before the test.
      * 
      * @param string $path path to be checked
      * @param string $directory directory that the given that should lie in
@@ -112,6 +114,6 @@ class FileHelper
     {
         // ensure single trailing slash
         $directory = rtrim( $directory, '/' ) . '/';
-        return substr( realpath( $path ), 0, strlen( $directory ) ) === $directory;
+        return substr( $path, 0, strlen( $directory ) ) === $directory;
     }
 }
