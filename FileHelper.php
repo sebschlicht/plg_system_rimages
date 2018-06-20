@@ -37,18 +37,7 @@ class FileHelper
      */
     public static function getPathFromUrl( $url )
     {
-        return self::convertUrlPathToFilePath( parse_url( $url, PHP_URL_PATH ) );
-    }
-
-    /**
-     * Converts an URL path to a file path with the directory separator of the current OS.
-     * 
-     * @param string $urlPath URL path
-     * @return string file path
-     */
-    public static function convertUrlPathToFilePath( $urlPath )
-    {
-        return $urlPath ? str_replace( '/', DIRECTORY_SEPARATOR, $urlPath ) : $urlPath;
+        return parse_url( $url, PHP_URL_PATH );
     }
 
     /**
@@ -59,7 +48,7 @@ class FileHelper
      */
     public static function isAbsolutePath( $path )
     {
-        return substr( $path, 0, 1 ) === DIRECTORY_SEPARATOR;
+        return substr( $path, 0, 1 ) === '/';
     }
 
     /**
@@ -85,7 +74,7 @@ class FileHelper
     }
 
     /**
-     * Builds the relative path for an external URL, including its domain.
+     * Builds the relative path for an external URL, including its domain and query.
      * 
      * @param string $url external URL
      * @return string relative path representing the full URL
@@ -96,8 +85,7 @@ class FileHelper
         $parts = parse_url( $url );
         if (!$parts) return false;
 
-        $urlPath = self::convertUrlPathToFilePath( $parts['path'] );
-        return $parts['host'] . DIRECTORY_SEPARATOR . (!self::isAbsolutePath( $urlPath ) ? $urlPath : substr( $urlPath, 1 ));
+        return $parts['host'] . $parts['path'] . '/' . sha1( $parts['query'] . '#' . $parts['fragment'] );
     }
 
     /**
@@ -110,5 +98,20 @@ class FileHelper
     public static function downloadFile( $url, $path )
     {
         return file_put_contents( $path, fopen( $url, 'r' ) );
+    }
+
+    /**
+     * Checks whether a path lies within a certain directory.
+     * The given path will be expanded to its real path before the test.
+     * 
+     * @param string $path path to be checked
+     * @param string $directory directory that the given that should lie in
+     * @return bool true if the given path lies within the given directory, false otherwise
+     */
+    public static function isPathWithin( $path, $directory )
+    {
+        // ensure single trailing slash
+        $directory = rtrim( $directory, '/' ) . '/';
+        return substr( realpath( $path ), 0, strlen( $directory ) ) === $directory;
     }
 }
