@@ -20,24 +20,41 @@ Thus *RIMAGES* is must-have *Search Engine Optimization* (SEO) tool.
 The usage of the plugin heavily depends on the configuration of [breakpoint packages](#breakpoint-packages) and [breakpoints](#breakpoints).
 
 Breakpoints steer the resizing feature and mainly specify widths of alternative image versions.
+Each breakpoint corresponds to a resized image version that is displayed on devices with a certain viewport width.
 Having no breakpoints configured effectively disables the resizing feature.
 
-Breakpoint packages consist of any number of breakpoints and feature a CSS selector that controls which images the breakpoints apply to.
+Breakpoint packages consist of any number of breakpoints and feature a CSS selector that controls which images its breakpoints apply to.
 
-*Example 1*: To replace all images on your website with compressed versions, set the CSS selector of a breakpoint package to
+### Example 1
+
+To replace all images on your website with compressed versions, set the CSS selector of a breakpoint package to
 
     img
 
-Please note that the [configuration options](#options) have to be set properly, to make this example work.
-The default settings are just fine.
+This simple step will most likely reduce your image transfer size by 20 to 50 percent.
 
-*Example 2*: To make a full-width slider use resized images on a website build with *Bootstrap* that fit the user device best, you might need to set the CSS selector of a breakpoint package to,
+>Please note that the [configuration options](#options) have to be set properly, to make this example work.
+>The default settings are just fine.
+
+### Example 2
+
+Consider you've build a website with *Bootstrap* that features a full-width slider (`<div id="slider" />`).
+You've selected large images for your slides to maintain a high quality on large screens.
+On the downside, these large images are downloaded and downscaled on smaller screens.
+Particularly mobile devices would benefit from resized images that are just large enough to fill their viewport width.
+
+To make this slider use resized images, set the CSS selector of a breakpoint package to
 
     #slider img
 
-configure 3 breakpoints for the smaller *Bootstrap* device sizes (extra small, small, medium) and use the respective max-widths (e.g. XS = 767px) as image widths.
+Then configure 3 breakpoints for the smaller *Bootstrap* device sizes (extra small, small, medium) and use the respective max-width (e.g. XS = 767px) as image width:
 
-Now each device can show the compressed and resized image version that fits its viewport width best.
+    viewportWidth:XS imageWidth:767
+
+Each breakpoint will lead to a resized version of the slider images and devices can select the smallest version that fills their viewport width.
+If enabled, these resized (and compressed) versions will be generated automatically.
+
+You might want to add a fourth breakpoint at 360px to offer even smaller images to smartphones and similar devices.
 
 ## Installation
 
@@ -65,3 +82,44 @@ The tag is fully backwards-compatible, users with old browsers just won't benefi
 
 Due to the additional `picture` tag in the DOM tree, this feature could nevertheless break JavaScript code (e.g. `$slide.children( 'img' )`) and CSS directives (e.g. `.slide > img`).
 However, you can easily prevent that by using appropriate CSS selectors when configuring the plugin.
+
+## Configuration
+
+The plugin configuration is split up into three parts:
+
+1. basic configuration options, shown in the plugin tab
+2. breakpoint packages that apply to all images, shown in the global tab
+3. breakpoint packages that apply to content (e.g. articles), shown in the content tab
+
+### Options
+
+Option | Description
+------ | -----------
+`Folder` | Folder to store and lookup responsive image versions.
+`Replace Original Image` | Flag to replace original images with compressed versions on-page when processing them.
+`Generate Images` | Flag to generate missing compressed and resized versions of processed images.
+`Download Images` | Flag to download and process images when they're originally hosted on a remote server.
+
+### Breakpoints
+
+Breakpoints steer the resizing feature and mainly specify widths of alternative image versions.
+Each breakpoint corresponds to a resized image version that is displayed on devices with a certain viewport width.
+Having no breakpoints configured effectively disables the resizing feature.
+
+A breakpoint has three values, where one may be omitted:
+
+The viewport width specifies the maximum width of a viewport that may used this resized version of an image.
+You may choose to select this width from a list of pre-defined values, such as *Bootstrap* device widths, or enter a custom value.
+
+The image width specifies the maximum width of the resized version of an image.
+This is required to generate the resized version automatically.
+If the original image doesn't exceed this width it's not resized at all and hence won't waste disk storage and bandwidth.
+
+### Breakpoint Packages
+
+Breakpoint packages consist of any number of breakpoints and feature a CSS selector that controls which images its breakpoints apply to.
+Having no breakpoint packages configured effectively disables the plugin.
+
+Content packages are processed before global packages.
+Besides, breakpoint packages are processed in the same order as they're shown.
+Always remember: Once an image was handled by a package, it's not processed a second time.
