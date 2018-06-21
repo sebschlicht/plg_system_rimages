@@ -44,7 +44,7 @@ class HtmlHelper
         $html = "<$tagName";
         foreach ($attributes as $key => $value)
         {
-            $html .= " $key=\"$value\"";
+            $html .= " $key" . ($value !== null ? "=\"$value\"" : '');
         }
         return $html . '/>';
     }

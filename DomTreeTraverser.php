@@ -49,11 +49,19 @@ class DomTreeTraverser
         $this->errors = array_filter( libxml_get_errors(), $filterHtml5Warnings );
         libxml_clear_errors();
 
-        // start with the body tag
-        $this->node = $this->dom->documentElement->firstChild;
-        if ($this->node->nodeName === 'head' && $this->node->nextSibling) $this->node = $this->node->nextSibling;
+        // start with the body
+        $this->resetNode();
         
         return !$this->errors;
+    }
+
+    /**
+     * Resets the current node to the body element.
+     */
+    private function resetNode()
+    {
+        $this->node = $this->dom->documentElement->firstChild;
+        if ($this->node->nodeName === 'head' && $this->node->nextSibling) $this->node = $this->node->nextSibling;
     }
 
     /**
@@ -78,6 +86,8 @@ class DomTreeTraverser
             // add matching nodes
             if ($this->_is( $selectors, $this->node )) array_push( $result, $this->node );
         }
+        $this->resetNode();
+
         return $result;
     }
 
