@@ -75,12 +75,6 @@
       <fieldset name="global">
         <field type="text" name="global_selector1"
           label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR1_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
-        <field type="list" name="global_generate_images1"
-          label="PLG_SYSTEM_RIMAGES_CFG_PACKAGE_GENERATE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_PACKAGE_GENERATE_IMAGES_DESC"
-          useglobal="true" class="chzn-color">
-          <option value="1">JYES</option>
-          <option value="0">JNO</option>
-        </field>
         <field type="subform" name="global_breakpoints1"
           label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
           formsource="/plugins/system/rimages/forms/breakpoint.xml"

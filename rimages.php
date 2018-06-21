@@ -150,11 +150,11 @@ class PlgSystemRimages extends JPlugin
             // process specified images
             foreach ($images as $image)
             {
-                $sources = $this->getAvailableSources( $image, $breakpointPackage );
-                if ($sources)
+                $tagHtml = $this->getAvailableSources( $image, $breakpointPackage );
+                if ($tagHtml)
                 {
-                    // inject picture tag
-                    $dt->replaceNode( $image, '<picture>' . implode( '', $sources ) . '</picture>' );
+                    // inject picture/img tag
+                    $dt->replaceNode( $image, $tagHtml );
                     $imagesReplaced = true;
                 }
             }
@@ -168,7 +168,7 @@ class PlgSystemRimages extends JPlugin
      * 
      * @param DOMNode $image image node
      * @param array $breakpointPackage configured breakpoint package
-     * @return array list of sources (as HTML code)
+     * @return string HTML code of the image/picture tag
      */
     private function getAvailableSources( &$image, &$breakpointPackage )
     {
@@ -177,9 +177,9 @@ class PlgSystemRimages extends JPlugin
         if (!$src) return false;
 
         $doGenerateImages = $this->getPackageGenerateImages( $breakpointPackage );
+        $doDownloadExternalImages = $this->params->get( 'download_images', false );
 
         // load local image
-        $doDownloadExternalImages = $this->params->get( 'download_images', false );
         if (!FileHelper::isExternalUrl( $src ))
         {
             JLog::add( "Processing local image: $src", JLog::DEBUG, 'rimages' );
@@ -241,12 +241,7 @@ class PlgSystemRimages extends JPlugin
             return false;
         }
         JLog::add( "Replica folder (short): $replicaSrc", JLog::DEBUG, 'rimages' );
-
-        // load file info
-        $pathInfo = pathinfo( $relFile );
-        $filename = $pathInfo['filename'];
-        $extension = $pathInfo['extension'];
-        
+       
         // loop configured breakpoints
         $sources = [];
         foreach( $breakpointPackage['breakpoints'] as $breakpoint)
@@ -255,52 +250,10 @@ class PlgSystemRimages extends JPlugin
             $viewportWidth = self::getBreakpointWidth( $breakpoint );
             if (!$viewportWidth) continue;
 
-            // build path to respective responsive version
-            $srcResponsive = "$replicaSrc/" . self::buildResponsiveImageFilename( $pathInfo, $viewportWidth );
-            JLog::add( "Responsive image version $viewportWidth: $srcResponsive", JLog::DEBUG, 'rimages' );
-
-            // generate the file if not available and automatic creation enabled
-            if (!is_file( $srcResponsive ))
-            {
-                // check if image generation enabled and width provided
-                if ($doGenerateImages && $breakpoint['imageWidth'])
-                {
-                    if (!is_dir( $replicaDir ))
-                    {
-                        if (!JFolder::create( $replicaDir ))
-                        {
-                            JLog::add( "Failed to create replica folder '$replicaDir'!", JLog::ERROR, 'rimages' );
-                            continue;
-                        }
-                    }
-                    if (self::isWritable( $replicaDir ))
-                    {
-                        try
-                        {
-                            if (!self::generateImage( $orgFile, $srcResponsive, $breakpoint['imageWidth'] ))
-                            {
-                                JLog::add( "Failed to generate missing version '$srcResponsive'!", JLog::ERROR, 'rimages' );
-                                continue;
-                            }
-                        }
-                        catch (Exception $e)
-                        {
-                            JLog::add( "Failed to generate missing version '$srcResponsive': {$e->getMessage()}!", JLog::ERROR, 'rimages' );
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        JLog::add( "Failed to access replica folder at '$replicaDir'!", JLog::ERROR, 'rimages' );
-                        continue;
-                    }
-                }
-                else
-                {
-                    JLog::add( "Automatic image generation disabled or target width undefined!", JLog::DEBUG, 'rimages' );
-                    continue;
-                }
-            }
+            // load the responsive image version (may create it)
+            $srcResponsive = $this->loadResponsiveImage( $orgFile, $replicaDir, $viewportWidth,
+                $breakpoint['imageWidth'], $doGenerateImages );
+            if (!$srcResponsive) continue;
 
             // build and add source tag
             $sourceTag = HtmlHelper::buildSimpleTag( 'source', [
@@ -314,7 +267,61 @@ class PlgSystemRimages extends JPlugin
         // add original image
         array_push( $sources, HtmlHelper::buildSimpleTag( 'img', HtmlHelper::getNodeAttributes( $image ) ) );
 
-        return $sources;
+        return '<picture>' . implode( '', $sources ) . '</picture>';
+    }
+
+    private function loadResponsiveImage( &$orgFile, &$replicaDir, $viewportWidth = null, $imageWidth = null,
+        $doGenerateImages = false, $doRegenerateImages = false )
+    {
+        // build path to respective responsive version
+        $replicaSrc = substr( $replicaDir, strlen( JPATH_ROOT ) + 1 );
+        $pathInfo = pathinfo( $orgFile );
+        $srcResponsive = "$replicaSrc/" . self::buildResponsiveImageFilename( $pathInfo, $viewportWidth );
+        JLog::add( 'Responsive image version (' . ($viewportWidth ? $viewportWidth : 'org') . "): $srcResponsive", JLog::DEBUG, 'rimages' );
+
+        // generate if missing or regeneration requested
+        if ($doRegenerateImages || !is_file( $srcResponsive ))
+        {
+            // check if image generation enabled 
+            if ($doGenerateImages)
+            {
+                // create missing replica folder
+                if (!is_dir( $replicaDir ) && !JFolder::create( $replicaDir ))
+                {
+                    JLog::add( "Failed to create replica folder '$replicaDir'!", JLog::ERROR, 'rimages' );
+                    return false;
+                }
+                // generate responsive image version
+                try
+                {
+                    if (!self::generateImage( $orgFile, $srcResponsive, $imageWidth ))
+                    {
+                        JLog::add( "Failed to generate missing version '$srcResponsive'!", JLog::ERROR, 'rimages' );
+                        return false;
+                    }
+                    else
+                    {
+                        // image has been generated successfully
+                        return $srcResponsive;
+                    }
+                }
+                catch (Exception $e)
+                {
+                    JLog::add( "Failed to generate missing version '$srcResponsive': {$e->getMessage()}!", JLog::ERROR, 'rimages' );
+                    return false;
+                }
+            }
+            else
+            {
+                JLog::add( "Automatic image generation disabled or target width undefined!", JLog::DEBUG, 'rimages' );
+                return false;
+            }
+        }
+        else
+        {
+            // use existing image
+            return $srcResponsive;
+        }
     }
 
     /**
@@ -397,7 +404,7 @@ class PlgSystemRimages extends JPlugin
      */
     private static function buildResponsiveImageFilename( &$pathInfo, $width = null )
     {
-        return $pathInfo['filename'] . ($width !== null ? "_$width" : '') . '.jpg';
+        return $pathInfo['filename'] . ($width ? "_$width" : '') . '.jpg';
     }
 
     /**
@@ -436,7 +443,6 @@ class PlgSystemRimages extends JPlugin
             // try to retrieve tuple with current index
             $selector = $this->params->get( "{$fieldPrefix}_selector$i", false );
             $breakpoints = $this->params->get( "{$fieldPrefix}_breakpoints$i", false );
-            $generateImages = $this->params->get( "{$fieldPrefix}_generate_images", null );
 
             if ($selector && $breakpoints)
             {
@@ -445,7 +451,6 @@ class PlgSystemRimages extends JPlugin
                     'selector' => $selector,
                     'breakpoints' => array_map( $castToArray, array_values( (array) $breakpoints ) ),
                 ];
-                if ($generateImages !== null) $package['generate_images'] = $generateImages;
 
                 // add package with sorted breakpoints
                 usort( $package['breakpoints'], $sortBreakpoints );
@@ -468,11 +473,14 @@ class PlgSystemRimages extends JPlugin
 
         $im->stripImage();
 
-        $imgWidth = $im->getImageWidth();
-        if ($imgWidth > $maxWidth)
+        if ($maxWidth)
         {
-            $targetHeight = $maxWidth * ($im->getImageHeight() / $imgWidth);
-            $im->resizeImage( $maxWidth, $targetHeight, Imagick::FILTER_SINC, 1 );
+            $imgWidth = $im->getImageWidth();
+            if ($imgWidth > $maxWidth)
+            {
+                $targetHeight = $maxWidth * ($im->getImageHeight() / $imgWidth);
+                $im->resizeImage( $maxWidth, $targetHeight, Imagick::FILTER_SINC, 1 );
+            }
         }
 
         $im->setImageFormat( 'jpg' );
