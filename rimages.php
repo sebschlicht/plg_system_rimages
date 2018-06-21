@@ -178,6 +178,7 @@ class PlgSystemRimages extends JPlugin
 
         $doGenerateImages = $this->getPackageGenerateImages( $breakpointPackage );
         $doDownloadExternalImages = $this->params->get( 'download_images', false );
+        $doReplaceOriginalImage = $this->params->get( 'replace_original', true );
 
         // load local image
         if (!FileHelper::isExternalUrl( $src ))
@@ -251,8 +252,8 @@ class PlgSystemRimages extends JPlugin
             if (!$viewportWidth) continue;
 
             // load the responsive image version (may create it)
-            $srcResponsive = $this->loadResponsiveImage( $orgFile, $replicaDir, $viewportWidth,
-                $breakpoint['imageWidth'], $doGenerateImages );
+            $srcResponsive = $this->loadResponsiveImage( $orgFile, $replicaDir, $doGenerateImages, $viewportWidth,
+                $breakpoint['imageWidth'] );
             if (!$srcResponsive) continue;
 
             // build and add source tag
@@ -264,14 +265,33 @@ class PlgSystemRimages extends JPlugin
             array_push( $sources, $sourceTag );
         }
 
-        // add original image
-        array_push( $sources, HtmlHelper::buildSimpleTag( 'img', HtmlHelper::getNodeAttributes( $image ) ) );
+        // handle original image
+        $imgAttr = HtmlHelper::getNodeAttributes( $image );
+        if ($doReplaceOriginalImage)
+        {
+            // replace original image with its compressed version
+            $srcCompressed = $this->loadResponsiveImage( $orgFile, $replicaDir, $doGenerateImages );
+            if ($srcCompressed) $imgAttr['src'] = $srcCompressed;
+        }
+        array_push( $sources, HtmlHelper::buildSimpleTag( 'img', $imgAttr ) );
 
-        return '<picture>' . implode( '', $sources ) . '</picture>';
+        // return img or picture tag, if sources available
+        return count( $sources ) === 1 ? $sources[0] : '<picture>' . implode( '', $sources ) . '</picture>';
     }
 
-    private function loadResponsiveImage( &$orgFile, &$replicaDir, $viewportWidth = null, $imageWidth = null,
-        $doGenerateImages = false, $doRegenerateImages = false )
+    /**
+     * Loads a responsive version of an image and, if desired, creates it if it's missing.
+     * 
+     * @param string $orgFile path to the original image file
+     * @param string $replicaDir path to the replica folder
+     * @param bool $doGenerateImages (optional) flag whether to generate the responsive version if it's missing
+     * @param int $viewportWidth (optional) viewport width name, if it's a resized version
+     * @param int $imageWidth (optional) target width of the image, if it's a resized version
+     * @param bool $doRegenerateImages (optional) flag whether to re-generate the responsive version if it's existing
+     * @return string|false relative path to the responsive image version or false if it's not available
+     */
+    private function loadResponsiveImage( &$orgFile, &$replicaDir, $doGenerateImages = true, $viewportWidth = null,
+        $imageWidth = null, $doRegenerateImages = false )
     {
         // build path to respective responsive version
         $replicaSrc = substr( $replicaDir, strlen( JPATH_ROOT ) + 1 );
@@ -334,9 +354,15 @@ class PlgSystemRimages extends JPlugin
     private function getPackageGenerateImages( &$breakpointPackage )
     {
         return extension_loaded( 'imagick' ) && (array_key_exists( 'generate_images', $breakpointPackage )
-            ? $breakpointPackage['generate_images'] : $this->params->get( 'generate_images', false ));
+            ? $breakpointPackage['generate_images'] : $this->params->get( 'generate_images', true ));
     }
 
+    /**
+     * Retrieves the actual maximum width of a breakpoint.
+     * 
+     * @param array $breakpoint breakpoint
+     * @return int|null breakpoint width or null if the pre-defined width couldn't be resolved
+     */
     private static function getBreakpointWidth( &$breakpoint )
     {
         $widthName = $breakpoint['width'] !== '0' ? $breakpoint['width'] : $breakpoint['customWidth'];
@@ -461,12 +487,16 @@ class PlgSystemRimages extends JPlugin
     }
 
     /**
-     * Generates a reduced JPEG version of an image, following the Google PageSpeed Insight recommendation for images.
+     * Generates a compressed JPEG version of an image, following the Google PageSpeed Insight recommendation for images.
+     * The image may be resized during this process if a maximum width is specified.
+     * The generation is aborted if it's resized but the original image doesn't exceed the given width.
      * 
      * @param string $source path to the original image
      * @param string $target target path for the file being generated
+     * @param int $maxWidth (optional) maximum width of the compressed image
+     * @return bool true if the image has been generated successfully, false otherwise
      */
-    private static function generateImage( $source, $target, $maxWidth )
+    private static function generateImage( $source, $target, $maxWidth = null )
     {
         $im = new Imagick( $source );
         $im = $im->mergeImageLayers( Imagick::LAYERMETHOD_FLATTEN );
@@ -480,6 +510,10 @@ class PlgSystemRimages extends JPlugin
             {
                 $targetHeight = $maxWidth * ($im->getImageHeight() / $imgWidth);
                 $im->resizeImage( $maxWidth, $targetHeight, Imagick::FILTER_SINC, 1 );
+            }
+            else
+            {
+                return false;
             }
         }
 
