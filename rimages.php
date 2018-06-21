@@ -165,28 +165,6 @@ class PlgSystemRimages extends JPlugin
             }
         }
 
-        // process all images to replace originals
-        if ( $this->params->get( 'replace_original', true ) )
-        {
-            $images = $dt->find( 'img' );
-            $images = $dt->remove( $images, 'picture img' );
-            foreach ($images as $image)
-            {
-                // ignore previously processed original images
-                if (!$image->hasAttribute( 'data-rimages' ))
-                {
-                    $tagHtml = $this->getAvailableSources( $image );
-    
-                    if ($tagHtml)
-                    {
-                        // inject picture/img tag
-                        $dt->replaceNode( $image, $tagHtml );
-                        $imagesReplaced = true;
-                    }
-                }
-            }
-        }
-
         return $imagesReplaced ? $dt->getHtml() : false;
     }
 
@@ -505,16 +483,16 @@ class PlgSystemRimages extends JPlugin
             $selector = $this->params->get( "{$fieldPrefix}_selector$i", false );
             $breakpoints = $this->params->get( "{$fieldPrefix}_breakpoints$i", false );
 
-            if ($selector && $breakpoints)
+            if ($selector)
             {
                 // build breakpoint package
                 $package = [
                     'selector' => $selector,
-                    'breakpoints' => array_map( $castToArray, array_values( (array) $breakpoints ) ),
+                    'breakpoints' => $breakpoints ? array_map( $castToArray, array_values( (array) $breakpoints ) ) : [],
                 ];
 
                 // add package with sorted breakpoints
-                usort( $package['breakpoints'], $sortBreakpoints );
+                if ($package['breakpoints']) usort( $package['breakpoints'], $sortBreakpoints );
                 array_push( $packages, $package );
             }
         }
