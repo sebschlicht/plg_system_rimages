@@ -164,6 +164,29 @@ class PlgSystemRimages extends JPlugin
                 }
             }
         }
+
+        // process all images to replace originals
+        if ( $this->params->get( 'replace_original', true ) )
+        {
+            $images = $dt->find( 'img' );
+            $images = $dt->remove( $images, 'picture img' );
+            foreach ($images as $image)
+            {
+                // ignore previously processed original images
+                if (!$image->hasAttribute( 'data-rimages' ))
+                {
+                    $tagHtml = $this->getAvailableSources( $image );
+    
+                    if ($tagHtml)
+                    {
+                        // inject picture/img tag
+                        $dt->replaceNode( $image, $tagHtml );
+                        $imagesReplaced = true;
+                    }
+                }
+            }
+        }
+
         return $imagesReplaced ? $dt->getHtml() : false;
     }
 
@@ -175,7 +198,7 @@ class PlgSystemRimages extends JPlugin
      * @param array $breakpointPackage configured breakpoint package
      * @return string HTML code of the image/picture tag
      */
-    private function getAvailableSources( &$image, &$breakpointPackage )
+    private function getAvailableSources( &$image, &$breakpointPackage = null )
     {
         // try to load image source
         $src = $image->hasAttribute( 'src' ) ? $image->getAttribute( 'src' ) : false;
