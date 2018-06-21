@@ -129,8 +129,8 @@ class PlgSystemRimages extends JPlugin
      */
     private function processHtml( $html, $breakpointPackages )
     {
-        // don't process HTML without configure breakpoints
-        if (!$breakpointPackages || !$html) return false;
+        // don't process HTML if it's empty
+        if (!$html || ctype_space( $html )) return false;
 
         // set up DOM tree traverser
         $dt = new DomTreeTraverser();
@@ -150,12 +150,17 @@ class PlgSystemRimages extends JPlugin
             // process specified images
             foreach ($images as $image)
             {
-                $tagHtml = $this->getAvailableSources( $image, $breakpointPackage );
-                if ($tagHtml)
+                // ignore previously processed original images
+                if (!$image->hasAttribute( 'data-rimages' ))
                 {
-                    // inject picture/img tag
-                    $dt->replaceNode( $image, $tagHtml );
-                    $imagesReplaced = true;
+                    $tagHtml = $this->getAvailableSources( $image, $breakpointPackage );
+
+                    if ($tagHtml)
+                    {
+                        // inject picture/img tag
+                        $dt->replaceNode( $image, $tagHtml );
+                        $imagesReplaced = true;
+                    }
                 }
             }
         }
@@ -245,24 +250,27 @@ class PlgSystemRimages extends JPlugin
        
         // loop configured breakpoints
         $sources = [];
-        foreach( $breakpointPackage['breakpoints'] as $breakpoint)
+        if ($breakpointPackage)
         {
-            // load targeted viewport width
-            $viewportWidth = self::getBreakpointWidth( $breakpoint );
-            if (!$viewportWidth) continue;
-
-            // load the responsive image version (may create it)
-            $srcResponsive = $this->loadResponsiveImage( $orgFile, $replicaDir, $doGenerateImages, $viewportWidth,
-                $breakpoint['imageWidth'] );
-            if (!$srcResponsive) continue;
-
-            // build and add source tag
-            $sourceTag = HtmlHelper::buildSimpleTag( 'source', [
-                'media' => "(max-width: {$viewportWidth}px)",
-                'srcset' => $srcResponsive,
-                'data-rimages-w' => $viewportWidth,
-            ] );
-            array_push( $sources, $sourceTag );
+            foreach( $breakpointPackage['breakpoints'] as $breakpoint)
+            {
+                // load targeted viewport width
+                $viewportWidth = self::getBreakpointWidth( $breakpoint );
+                if (!$viewportWidth) continue;
+    
+                // load the responsive image version (may create it)
+                $srcResponsive = $this->loadResponsiveImage( $orgFile, $replicaDir, $doGenerateImages, $viewportWidth,
+                    $breakpoint['imageWidth'] );
+                if (!$srcResponsive) continue;
+    
+                // build and add source tag
+                $sourceTag = HtmlHelper::buildSimpleTag( 'source', [
+                    'media' => "(max-width: {$viewportWidth}px)",
+                    'srcset' => $srcResponsive,
+                    'data-rimages-w' => $viewportWidth,
+                ] );
+                array_push( $sources, $sourceTag );
+            }
         }
 
         // handle original image
@@ -272,6 +280,9 @@ class PlgSystemRimages extends JPlugin
             // replace original image with its compressed version
             $srcCompressed = $this->loadResponsiveImage( $orgFile, $replicaDir, $doGenerateImages );
             if ($srcCompressed) $imgAttr['src'] = $srcCompressed;
+
+            // mark img as processed if it won't be within a picture tag
+            if (!$sources) $imgAttr['data-rimages'] = null;
         }
         array_push( $sources, HtmlHelper::buildSimpleTag( 'img', $imgAttr ) );
 
@@ -353,8 +364,9 @@ class PlgSystemRimages extends JPlugin
      */
     private function getPackageGenerateImages( &$breakpointPackage )
     {
-        return extension_loaded( 'imagick' ) && (array_key_exists( 'generate_images', $breakpointPackage )
-            ? $breakpointPackage['generate_images'] : $this->params->get( 'generate_images', true ));
+        return extension_loaded( 'imagick' )
+            && (($breakpointPackage && array_key_exists( 'generate_images', $breakpointPackage ))
+                ? $breakpointPackage['generate_images'] : $this->params->get( 'generate_images', true ));
     }
 
     /**
