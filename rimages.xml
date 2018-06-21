@@ -73,17 +73,75 @@
           showon="generate_images:1[AND]download_images:1" default="1440"/>
       </fieldset>
       <fieldset name="global">
+        <!-- global package 1 -->
         <field type="text" name="global_selector1"
           label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR1_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
         <field type="subform" name="global_breakpoints1"
           label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
           formsource="/plugins/system/rimages/forms/breakpoint.xml"
           multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- global package 2 -->
+        <field type="text" name="global_selector2"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR2_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="global_breakpoints2"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- global package 3 -->
+        <field type="text" name="global_selector3"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR3_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="global_breakpoints3"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- global package 4 -->
+        <field type="text" name="global_selector4"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR4_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="global_breakpoints4"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- global package 5 -->
+        <field type="text" name="global_selector5"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR5_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="global_breakpoints5"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
       </fieldset>
       <fieldset name="content">
+        <!-- content package 1 -->
         <field type="text" name="content_selector1"
           label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR1_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
         <field type="subform" name="content_breakpoints1"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- content package 2 -->
+        <field type="text" name="content_selector2"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR2_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints2"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- content package 3 -->
+        <field type="text" name="content_selector3"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR3_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints3"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- content package 4 -->
+        <field type="text" name="content_selector4"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR4_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints4"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- content package 5 -->
+        <field type="text" name="content_selector5"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR5_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints5"
           label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
           formsource="/plugins/system/rimages/forms/breakpoint.xml"
           multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
