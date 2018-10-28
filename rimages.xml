@@ -1,37 +1,157 @@
 <extension version="3.2" type="plugin" group="system" method="upgrade">
+  <name>PLG_SYSTEM_RIMAGES</name>
+  <description>PLG_SYSTEM_RIMAGES_XML_DESCRIPTION</description>
+  <version>0.0.5</version>
 
-    <name>PLG_SYSTEM_RIMAGES</name>
+  <author>Sebastian Schlicht</author>
+  <creationDate>Jun 2018</creationDate>
+  <copyright>Copyright (C) 2018 Sebastian Schlicht. All rights reserved.</copyright>
+  <license>MIT License; see LICENSE</license>
+  <authorEmail>sebastian@jablab.de</authorEmail>
+  <authorUrl>http://www.jablab.de</authorUrl>
 
-    <author>Sebastian Schlicht</author>
-    <creationDate>Jun 2018</creationDate>
-    <copyright>Copyright (C) 2018 Sebastian Schlicht. All rights reserved.</copyright>
-    <license>MIT License; see LICENSE</license>
-    <authorEmail>sebastian@jablab.de</authorEmail>
-    <authorUrl>http://www.jablab.de</authorUrl>
-  
-    <updateservers>
-        <server type="extension" name="Responsive Images Plugin Updates">http://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
-    </updateservers>
+  <updateservers>
+    <server type="extension" name="Responsive Images Plugin Updates">http://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
+  </updateservers>
 
-    <version>0.0.1</version>
+  <install> <!-- Runs on install -->
+    <sql>
+      <file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+    </sql>
+  </install>
+  <uninstall> <!-- Runs on uninstall -->
+    <sql>
+      <file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+    </sql>
+  </uninstall>
+  <update> <!-- Runs on update; New since J2.5 -->
+    <schemas>
+      <schemapath type="mysql">sql/updates/mysql</schemapath>
+    </schemas>
+  </update>
 
-    <description>PLG_SYSTEM_RIMAGES_XML_DESCRIPTION</description>
+  <files>
+    <filename plugin="rimages">rimages.php</filename>
+    <filename>DomTreeTraverser.php</filename>
+    <filename>FileHelper.php</filename>
+    <filename>HtmlHelper.php</filename>
+    <filename>PredefinedBreakpoints.php</filename>
+    <filename>index.html</filename>
 
-    <files>
-        <filename plugin="rimages">rimages.php</filename>
-        <filename>index.html</filename>
+    <folder>forms</folder>
+    <folder>language</folder>
+    <folder>sql</folder>
+  </files>
 
-        <folder>language</folder>
-    </files>
+  <languages folder="language">
+    <language tag="en-GB">en-GB/en-GB.plg_system_rimages.ini</language>
+    <language tag="en-GB">en-GB/en-GB.plg_system_rimages.sys.ini</language>
+    <language tag="de-DE">de-DE/de-DE.plg_system_rimages.ini</language>
+    <language tag="de-DE">de-DE/de-DE.plg_system_rimages.sys.ini</language>
+  </languages>
 
-    <languages folder="language">
-        <language tag="en-GB">en-GB/en-GB.plg_system_rimages.ini</language>
-        <language tag="en-GB">en-GB/en-GB.plg_system_rimages.sys.ini</language>
-        <language tag="de-DE">de-DE/de-DE.plg_system_rimages.ini</language>
-        <language tag="de-DE">de-DE/de-DE.plg_system_rimages.sys.ini</language>
-    </languages>
-
-    <config>
-        <fields name="params" />
-    </config>
+  <config>
+    <fields name="params" addfieldpath="plugins/system/rimages/fields">
+      <fieldset name="basic">
+        <field type="text" name="replica_root"
+          label="PLG_SYSTEM_RIMAGES_CFG_REPLICA_ROOT_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_REPLICA_ROOT_DESC"
+          default="images/rimages"/>
+        <field type="radio" name="replace_original"
+          label="PLG_SYSTEM_RIMAGES_CFG_REPLACE_ORIGINAL_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_REPLACE_ORIGINAL_DESC"
+          class="btn-group btn-group-yesno" default="1">
+          <option value="1">JYES</option>
+          <option value="0">JNO</option>
+        </field>
+        <field type="radio" name="generate_images"
+          label="PLG_SYSTEM_RIMAGES_CFG_GENERATE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GENERATE_IMAGES_DESC"
+          class="btn-group btn-group-yesno" default="1">
+          <option value="1">JYES</option>
+          <option value="0">JNO</option>
+        </field>
+        <field type="radio" name="download_images"
+          label="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_DESC"
+          showon="generate_images:1" class="btn-group btn-group-yesno" default="0">
+          <option value="1">JYES</option>
+          <option value="0">JNO</option>
+        </field>
+        <field type="number" name="cache_images"
+          label="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_DESC"
+          showon="generate_images:1[AND]download_images:1" default="1440"/>
+      </fieldset>
+      <fieldset name="global">
+        <!-- global package 1 -->
+        <field type="text" name="global_selector1"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR1_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="global_breakpoints1"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- global package 2 -->
+        <field type="text" name="global_selector2"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR2_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="global_breakpoints2"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- global package 3 -->
+        <field type="text" name="global_selector3"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR3_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="global_breakpoints3"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- global package 4 -->
+        <field type="text" name="global_selector4"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR4_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="global_breakpoints4"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- global package 5 -->
+        <field type="text" name="global_selector5"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR5_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="global_breakpoints5"
+          label="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_GLOBAL_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+      </fieldset>
+      <fieldset name="content">
+        <!-- content package 1 -->
+        <field type="text" name="content_selector1"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR1_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints1"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- content package 2 -->
+        <field type="text" name="content_selector2"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR2_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints2"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- content package 3 -->
+        <field type="text" name="content_selector3"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR3_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints3"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- content package 4 -->
+        <field type="text" name="content_selector4"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR4_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints4"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+        <!-- content package 5 -->
+        <field type="text" name="content_selector5"
+          label="PLG_SYSTEM_RIMAGES_CFG_SELECTOR5_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_SELECTOR_DESC"/>
+        <field type="subform" name="content_breakpoints5"
+          label="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CONTENT_BREAKPOINTS_DESC"
+          formsource="/plugins/system/rimages/forms/breakpoint.xml"
+          multiple="true" layout="joomla.form.field.subform.repeatable-table"/>
+      </fieldset>
+    </fields>
+  </config>
 </extension>

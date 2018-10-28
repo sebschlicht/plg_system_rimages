@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form>
+  <field name="width" type="groupedlist"
+    label="PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_LABEL" description="PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_DESC">
+    <option value="0">PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_CUSTOM</option>
+    <group label="PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_BOOTSTRAP">
+      <option value="xs">PLG_SYSTEM_RIMAGES_BREAKPOINT_BOOTSTRAP_XS</option>
+      <option value="sm">PLG_SYSTEM_RIMAGES_BREAKPOINT_BOOTSTRAP_SM</option>
+      <option value="md">PLG_SYSTEM_RIMAGES_BREAKPOINT_BOOTSTRAP_MD</option>
+      <option value="ld">PLG_SYSTEM_RIMAGES_BREAKPOINT_BOOTSTRAP_LD</option>
+    </group>
+  </field>
+  <field name="customWidth" type="number"
+    label="PLG_SYSTEM_RIMAGES_BREAKPOINT_CUSTOM_LABEL" description="PLG_SYSTEM_RIMAGES_BREAKPOINT_CUSTOM_DESC"
+    showon="width:0"/>
+  <field name="imageWidth" type="number"
+    label="PLG_SYSTEM_RIMAGES_BREAKPOINT_IMAGE_LABEL" description="PLG_SYSTEM_RIMAGES_BREAKPOINT_IMAGE_DESC"/>
+</form>
