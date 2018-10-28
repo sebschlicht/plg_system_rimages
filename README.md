@@ -11,13 +11,12 @@ Thus *rim* is a great addition to your *Search Engine Optimization* (SEO) toolbo
 
 **Features**:
 
-* automatically compress/resize images
-* use CSS selectors to specify target dimensions for your images
-* offer resized image versions to browsers on smaller devices
-* compress images according to the [Google recommendation for image optimization](https://developers.google.com/speed/docs/insights/OptimizeImages)
-* increase Google *PageSpeed* rating which may improve the Google search ranking
-* supports external images (URLs)
-* Languages: English, German
+* automatically compress/resize images according to the [Google recommendation for image optimization](https://developers.google.com/speed/docs/insights/OptimizeImages)
+* limit image processing with CSS selectors
+* display smaller images on smaller devices
+* increase Google *PageSpeed* and improve Google search ranking
+* supports external images (from URL)
+* languages: English, German
 
 ## Usage
 
