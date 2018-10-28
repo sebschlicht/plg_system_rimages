@@ -1,12 +1,13 @@
 # RIMAGES - Responsive Images Plugin for Joomla! 3
 
-*RIMAGES* is a *Joomla!* plugin to make the images on your website responsive.
+RIMAGES (*rim*) is a *Joomla!* plugin to make the images on your website responsive.
 
-*RIMAGES* can compress your images and show resized images on smaller devices.
-CSS selectors allow to precisely control which images should be made responsive.
+*rim* can compress your images and display smaller images on smaller devices.
+Both compressend and resized images are generated automatically.
+Use CSS selectors to limit this process to specific images.
 
-Using *RIMAGES* helps to significantly decrease the page loading time and increase the Google *PageSpeed* rating, which contributes to the Google search ranking of your website.
-Thus *RIMAGES* is a great addition to your *Search Engine Optimization* (SEO) toolbox.
+Using *rim* helps to significantly decrease the page loading time and increase the Google *PageSpeed* rating, which contributes to the Google search ranking of your website.
+Thus *rim* is a great addition to your *Search Engine Optimization* (SEO) toolbox.
 
 **Features**:
 
@@ -19,10 +20,10 @@ Thus *RIMAGES* is a great addition to your *Search Engine Optimization* (SEO) to
 
 ## Usage
 
-The usage of the plugin heavily depends on the [configuration](https://github.com/sebschlicht/plg_system_rimages/wiki/Configuration) of breakpoint packages and breakpoints.
+The usage of the plugin heavily depends on the [configuration](https://github.com/sebschlicht/plg_system_rimages/wiki/Configuration) of breakpoint packages and breakpoints, see examples below.
 
 You configure breakpoint packages with a CSS selector to tell the plugin which images to compress and/or resize.
-Breakpoints in the package specify which image dimension is desired for which device.
+Breakpoints in the package specify which image dimension is desired for which device size.
 
 You can configure packages and breakpoints globally or for content (e.g. articles) only.
 Having no breakpoints in a package effectively disables the resize feature for this package.
@@ -55,14 +56,14 @@ You could add another breakpoint at 360px to offer tiny versions to smartphones 
 
 ## Installation
 
-Download the latest *RIMAGES* extension package and use the *Joomla!* extension manager to install it.
+Download the latest extension package and use the *Joomla!* extension manager to install it.
 The plugin is compatible with *Joomla!* 3.x.
 
 Use the *Joomla!* extension manager to uninstall the plugin and remove the configured image folder if you no longer need the responsive images.
 
 ## Compatibility
 
-*RIMAGES* is fully compatible with all browsers and with caching.
+*rim* is fully compatible with all browsers and with caching.
 Please consider pitfalls for CSS directives and JavaScript code at the wiki page on [compatibility](https://github.com/sebschlicht/plg_system_rimages/wiki/Compatibility).
 
-*ImageMagick* is required on your server to generate resized image versions automatically.
+*ImageMagick* is required on your server to generate compressed and/or resized images automatically.
