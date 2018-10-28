@@ -17,6 +17,7 @@ Thus *rim* is a great addition to your *Search Engine Optimization* (SEO) toolbo
 * compress images according to the [Google recommendation for image optimization](https://developers.google.com/speed/docs/insights/OptimizeImages)
 * increase Google *PageSpeed* rating which may improve the Google search ranking
 * supports external images (URLs)
+* Languages: English, German
 
 ## Usage
 
