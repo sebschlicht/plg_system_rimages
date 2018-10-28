@@ -30,11 +30,10 @@ You can configure packages and breakpoints globally or for content (e.g. article
 
 ### Compress all, resize non
 
-Having a breakpoint package with the selector
+Having a breakpoint package with the selector `img` tells the plugin to compress all images on your page.
 
-TODO screenshot
+![Universal breakpoint package configuration screenshot](https://github.com/sebschlicht/plg_system_rimages/blob/master/images/screen_rimages_img.png)
 
-tells the plugin to compress all images on your page.
 This step will most likely reduce your image transfer size by 20 to 50 percent.
 
 ### Resize slider images
@@ -43,13 +42,11 @@ Consider you've build a website with *Bootstrap* that features a full-width slid
 You've selected large images for your slides to maintain a high quality on large screens but the slider plugin uses these for small devices, too.
 Particularly mobile devices would benefit from resized images that are just large enough to fill their viewport width.
 
-To make this slider use resized images, simply set the CSS selector of a breakpoint package to
+To make this slider use resized images, simply set the CSS selector of a breakpoint package to `#slider img`.
 
-    #slider img
+Then configure breakpoints for smaller devices using the *Bootstrap* device sizes and set the respective max-widths (e.g. XS = 767px) as image width.
 
-Then configure breakpoints for smaller devices using the *Bootstrap* device sizes and set the respective max-widths (e.g. XS = 767px) as image width:
-
-TODO screenshot
+![Slider breakpoint package configuration screenshot](https://github.com/sebschlicht/plg_system_rimages/blob/master/images/screen_rimages_slider.png)
 
 Each breakpoint will lead to a resized version of the slider images and devices can select the smallest version that fills their viewport width.
 If enabled, these resized (and compressed) versions will be generated automatically.
