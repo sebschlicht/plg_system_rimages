@@ -3,17 +3,17 @@
 RIMAGES (*rim*) is a *Joomla!* plugin to make the images on your website responsive.
 
 *rim* can compress your images and display smaller images on smaller devices.
-Both compressend and resized images are generated automatically.
+Both compressed and resized images are generated automatically.
 Use CSS selectors to limit this process to specific images.
 
 Using *rim* helps to significantly decrease the page loading time and increase the Google *PageSpeed* rating, which contributes to the Google search ranking of your website.
-Thus *rim* is a great addition to your *Search Engine Optimization* (SEO) toolbox.
+Thus *rim* is a great addition to your Search Engine Optimization (SEO) toolbox.
 
 **Features**:
 
+* display smaller images on smaller devices
 * automatically compress/resize images according to the [Google recommendation for image optimization](https://developers.google.com/speed/docs/insights/OptimizeImages)
 * limit image processing with CSS selectors
-* display smaller images on smaller devices
 * increase Google *PageSpeed* and improve Google search ranking
 * supports external images (from URL)
 * languages: English, German
@@ -24,10 +24,6 @@ The usage of the plugin heavily depends on the [configuration](https://github.co
 
 You configure breakpoint packages with a CSS selector to tell the plugin which images to compress and/or resize.
 Breakpoints in the package specify which image dimension is desired for which device size.
-
-You can configure packages and breakpoints globally or for content (e.g. articles) only.
-Having no breakpoints in a package effectively disables the resize feature for this package.
-Having no breakpoint packages effectively disables the plugin.
 
 ## Examples
 
