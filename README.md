@@ -50,6 +50,11 @@ If image generation is enabled (default setting), these resized and compressed v
 
 Now you could add another breakpoint at 360px to offer tiny versions to older smartphones and similar devices, for example.
 
+### Cropped version on small devices
+
+In case one of your images has a clear focus on a particular object or subject, you may want to crop the image to the area of interest rather than downscaling the whole image.
+You can simply provide cropped versions of a particular image for defined breakpoint by following the plugin's [naming convention](https://github.com/sebschlicht/plg_system_rimages/wiki/naming-convention) and still have smaller versions of other images generated automatically, if you want.
+
 ## Installation
 
 Download the latest extension package and use the *Joomla!* extension manager to install it.
