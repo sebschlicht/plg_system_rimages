@@ -1,13 +1,13 @@
 # RIMAGES - Responsive Images Plugin for Joomla! 3
 
-RIMAGES (*rim*) is a *Joomla!* plugin to make the images on your website responsive.
+RIMAGES (*rimg*) is a *Joomla!* plugin to make the images on your website responsive.
 
-*rim* can compress your images and display smaller images on smaller devices.
+*rimg* can compress your images and display resized (i.e. smaller) images on smaller devices.
 Both compressed and resized images are generated automatically.
 Use CSS selectors to limit this process to specific images.
 
-Using *rim* helps to significantly decrease the page loading time and increase the Google *PageSpeed* rating, which contributes to the Google search ranking of your website.
-Thus *rim* is a great addition to your Search Engine Optimization (SEO) toolbox.
+Using *rimg* helps to significantly decrease the page loading time and increase the Google *PageSpeed* rating, which contributes to the Google search ranking of your website.
+Thus *rimg* is a great addition to your Search Engine Optimization (SEO) toolbox.
 
 **Features**:
 
@@ -41,14 +41,14 @@ Consider you've build a website with *Bootstrap* that features a full-width slid
 You used large images to maintain a high quality on large screens but the slider plugin uses these for small devices, too.
 Particularly mobile devices would benefit from resized images that are just large enough to fill their viewport width.
 
-To make this slider use resized images, simply set the CSS selector of a breakpoint package to `#slider img`, configure breakpoints for smaller devices using the *Bootstrap* device sizes and set the respective max-widths (e.g. XS = 767px) as image width.
+To make this slider use resized images, simply set the CSS selector of a breakpoint package to `#slider img`, configure breakpoints for smaller devices (e.g. using the *Bootstrap* device sizes) and set the respective max-widths (e.g. XS = 767px) as image width.
 
 ![Slider breakpoint package configuration screenshot](https://github.com/sebschlicht/plg_system_rimages/blob/master/images/screen_rimages_slider.png)
 
 Each breakpoint will lead to a resized version of the slider images and devices can select the smallest version that fills their viewport width.
 If image generation is enabled (default setting), these resized and compressed versions will be generated automatically.
 
-You could add another breakpoint at 360px to offer tiny versions to smartphones and similar devices.
+You could add another breakpoint at 360px to offer tiny versions to older smartphones and similar devices.
 
 ## Installation
 
@@ -59,7 +59,8 @@ Use the *Joomla!* extension manager to uninstall the plugin and remove the confi
 
 ## Compatibility
 
-*rim* is fully compatible with all browsers and with caching.
+*rimg* is compatible with modern browsers and with caching.
+Incompatible browsers will neither benefit nor encounter issues.
 Please consider pitfalls for CSS directives and JavaScript code at the wiki page on [compatibility](https://github.com/sebschlicht/plg_system_rimages/wiki/Compatibility).
 
 *ImageMagick* is required on your server to generate compressed and/or resized images automatically.
