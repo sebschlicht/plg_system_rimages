@@ -195,6 +195,7 @@ class DomTreeTraverser
 
     /**
      * Checks whether a node matches a single, parsed selector.
+     * In a selector such as '#test img.large' we have two parts : ['#test', 'img.large']
      * 
      * @param array $selector parsed selector
      * @param DOMNode $node node
@@ -206,10 +207,10 @@ class DomTreeTraverser
         $pointer = $node;
         for ($i = 0; $i < $numParts; $i++)
         {
-            // traverse up if possible and we're not searching for the final target until we find the current target
+            // traverse up (if possible and we're not searching for the final target) until we find the current target
             while (!$this->_isPart( $selector[$i], $pointer ))
             {
-                if ($i && $pointer->parentNode) $pointer = $pointer->parentNode;
+                if ($i > 0 && $pointer->parentNode) $pointer = $pointer->parentNode;
                 else return false;
             }
         }
@@ -218,7 +219,7 @@ class DomTreeTraverser
 
     /**
      * Checks wether a node matches a part of a single selector.
-     * In a selector such as '.test img' we have two parts : ['.test', 'img']
+     * A selector part may look like 'img.large' which consists of the tag and a single class.
      * 
      * @param array $part selector part
      * @param DOMNode $node node
@@ -296,7 +297,7 @@ class DomTreeTraverser
         foreach($atoms as $atom)
         {
             if (substr( $atom, 0, 1 ) === '#') $result['id'] = substr( $atom, 1 );
-            if (substr( $atom, 0, 1 ) === '.')
+            elseif (substr( $atom, 0, 1 ) === '.')
             {
                 if ($result['classes'] === false) $result['classes'] = [];
                 array_push( $result['classes'], substr( $atom, 1 ) );
