@@ -14,7 +14,7 @@ Thus *rimg* is a great addition to your Search Engine Optimization (SEO) toolbox
 * display smaller images on smaller devices
 * automatically compress/resize images according to the [Google recommendation for image optimization](https://developers.google.com/speed/docs/insights/OptimizeImages)
 * limit image processing with CSS selectors
-* increase Google *PageSpeed* and improve Google search ranking
+* increase Google *PageSpeed* and improve Google search ranking in return
 * supports external images (from URL)
 * languages: English, German
 
@@ -38,7 +38,7 @@ This step will most likely reduce your image transfer size by 20 to 50 percent.
 ### Resize slider images
 
 Consider you've build a website with *Bootstrap* that features a full-width slider (`<div id="slider" />`).
-You used large images to maintain a high quality on large screens but the slider plugin uses these for small devices, too.
+You've used large images to maintain a high quality on large screens but the slider plugin uses these for small devices, as well.
 Particularly mobile devices would benefit from resized images that are just large enough to fill their viewport width.
 
 To make this slider use resized images, simply set the CSS selector of a breakpoint package to `#slider img`, configure breakpoints for smaller devices (e.g. using the *Bootstrap* device sizes) and set the respective max-widths (e.g. XS = 767px) as image width.
@@ -48,7 +48,7 @@ To make this slider use resized images, simply set the CSS selector of a breakpo
 Each breakpoint will lead to a resized version of the slider images and devices can select the smallest version that fills their viewport width.
 If image generation is enabled (default setting), these resized and compressed versions will be generated automatically.
 
-You could add another breakpoint at 360px to offer tiny versions to older smartphones and similar devices.
+Now you could add another breakpoint at 360px to offer tiny versions to older smartphones and similar devices, for example.
 
 ## Installation
 
