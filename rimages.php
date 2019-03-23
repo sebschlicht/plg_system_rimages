@@ -183,7 +183,7 @@ class PlgSystemRimages extends JPlugin
         if (!$src) return false;
 
         $doGenerateImages = $this->getPackageGenerateImages( $breakpointPackage );
-        $doDownloadExternalImages = $this->params->get( 'download_images', false );
+        $doDownloadExternalImages = $this->params->get( 'download_images', false ) && $this->params->get( 'download_images_inner', false );
         $doReplaceOriginalImage = $this->params->get( 'replace_original', true );
 
         // load local image

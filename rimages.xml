@@ -74,6 +74,9 @@
           <option value="1">JYES</option>
           <option value="0">JNO</option>
         </field>
+        <field type="checkbox" name="download_images_inner"
+          label="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_CONFIRM_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_CONFIRM_DESC"
+          showon="generate_images:1[AND]download_images:1" default="0"/>
         <field type="number" name="cache_images"
           label="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_DESC"
           showon="generate_images:1[AND]download_images:1" default="1440"/>
