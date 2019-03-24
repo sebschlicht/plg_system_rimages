@@ -11,11 +11,11 @@ Thus *rimg* is a great addition to your Search Engine Optimization (SEO) toolbox
 
 **Features**:
 
-* display smaller images on smaller devices
-* automatically compress/resize images according to the [Google recommendation for image optimization](https://developers.google.com/speed/docs/insights/OptimizeImages)
-* limit image processing with CSS selectors
+* display smaller or different images on smaller devices
+* automatically compress and/or resize images according to the [Google recommendation for image optimization](https://developers.google.com/speed/docs/insights/OptimizeImages)
+* limit image processing via CSS selectors
 * increase Google *PageSpeed* and improve Google search ranking in return
-* supports external images (from URL)
+* support for external images (from URL)
 * languages: English, German
 
 ## Usage
@@ -29,26 +29,37 @@ Breakpoints in the package specify which image dimension is desired for which de
 
 ### Compress all, resize non
 
-Having a breakpoint package with the selector `img` tells the plugin to compress all images on your page.
+Having a global breakpoint package with the selector `img` tells the plugin to compress all images on your page.
 
 ![Universal breakpoint package configuration screenshot](https://github.com/sebschlicht/plg_system_rimages/blob/master/images/screen_rimages_img.png)
 
-This step will most likely reduce your image transfer size by 20 to 50 percent.
+This simple step will most likely reduce your image transfer size by 20 to 50 percent.
 
-### Resize slider images
+### Resize article images
 
-Consider you've build a website with *Bootstrap* that features a full-width slider (`<div id="slider" />`).
-You've used large images to maintain a high quality on large screens but the slider plugin uses these for small devices, as well.
-Particularly mobile devices would benefit from resized images that are just large enough to fill their viewport width.
+Even if you're using highly compressed images already, you may still benefit from this plugin:
+Consider you're using a couple of images in your articles.
+You've placed high-quality but at the same time large images for a nice visual experience on large screens.
+Particularly mobile devices with small screens and low bandwidth would benefit from resized images that are just large enough to fill their viewport width.
 
-To make this slider use resized images, simply set the CSS selector of a breakpoint package to `#slider img`, configure breakpoints for smaller devices (e.g. using the *Bootstrap* device sizes) and set the respective max-widths (e.g. XS = 767px) as image width.
+Simply add a content breakpoint package with the selector `article img` and configure breakpoints for each device size that you'd like to treat separatedly.
+For example, you could add a breakpoint for each *Boootstrap 3* device class (extra-small, small, medium, large).
+
+Each breakpoint will lead to a resized version of the image and devices can select the smallest version that fills their viewport.
+These version will be generated automatically for you, by default.
+
+However, you're not limited to the *Bootstrap* classes, you can configure any breakpoint you like.
+For example, you could add another breakpoint at 360px to offer tiny images to older smartphones and similar devices.
+
+### Resize images of extensions (e.g. a slider)
+
+Having CSS selectors gives you a great deal of flexibility.
+You aren't limited to process all or just article images but you could also process images of an extension.
+
+Maybe you're using a slider (`<div id="slider" />`) which isn't using resized images.
+To make this slider use resized images, simply add a breakpoint package with the selector `#slider img` and configure breakpoints for smaller devices, e.g. using the *Bootstrap 3* device classes again.
 
 ![Slider breakpoint package configuration screenshot](https://github.com/sebschlicht/plg_system_rimages/blob/master/images/screen_rimages_slider.png)
-
-Each breakpoint will lead to a resized version of the slider images and devices can select the smallest version that fills their viewport width.
-If image generation is enabled (default setting), these resized and compressed versions will be generated automatically.
-
-Now you could add another breakpoint at 360px to offer tiny versions to older smartphones and similar devices, for example.
 
 ### Cropped version on small devices
 
