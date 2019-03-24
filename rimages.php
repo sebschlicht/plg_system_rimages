@@ -259,9 +259,11 @@ class PlgSystemRimages extends JPlugin
                 $viewportWidth = self::getBreakpointWidth( $breakpoint );
                 if (!$viewportWidth) continue;
 
+                // load maximum image width, if set
+                $maxImageWidth = array_key_exists( 'imageWidth', $breakpoint ) ? $breakpoint['imageWidth'] : null;
+
                 // load the responsive image version (may create it)
-                $srcResponsive = $this->loadResponsiveImage( $orgFile, $replicaDir, $doGenerateImages, $viewportWidth,
-                    $breakpoint['imageWidth'] );
+                $srcResponsive = $this->loadResponsiveImage( $orgFile, $replicaDir, $doGenerateImages, $viewportWidth, $maxImageWidth );
                 if (!$srcResponsive) continue;
     
                 // build and add source tag
@@ -326,11 +328,15 @@ class PlgSystemRimages extends JPlugin
                 // generate responsive image version
                 try
                 {
-                    // search for alternative original in viewport width, if viewport width set
+                    // load alternative image information
                     $sourceFile = $orgFile;
                     if ( $viewportWidth ) {
+                        // search for alternative original for viewport width
                         $viewportSourceFile = $pathInfo['dirname'] . '/' . self::buildResponsiveImageFilename( $pathInfo, $viewportWidth );
                         if ( is_file( $viewportSourceFile ) ) $sourceFile = $viewportSourceFile;
+
+                        // maximum image width (for resizing) defaults to maximum viewport width
+                        if ( $imageWidth === null ) $imageWidth = $viewportWidth;
                     }
 
                     if (!self::generateImage( $sourceFile, $srcResponsive, $imageWidth ))

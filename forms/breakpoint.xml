@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form>
-  <field name="width" type="groupedlist"
+  <field name="width" type="groupedlist" class="required"
     label="PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_LABEL" description="PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_DESC">
     <option value="0">PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_CUSTOM</option>
     <group label="PLG_SYSTEM_RIMAGES_BREAKPOINT_TYPE_BOOTSTRAP">
