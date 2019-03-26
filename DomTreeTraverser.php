@@ -230,7 +230,7 @@ class DomTreeTraverser
         // compare HTML tag
         if ($part['tag'] && $node->nodeName !== $part['tag']) return false;
         // compare id attribute
-        if ($part['id'] && (!$node->hasAttribute( 'id' ) || $node->getAttribute( 'id' ) !== $part['id'])) return false;
+        if ($part['id'] && ($node instanceof DOMElement) && (!$node->hasAttribute( 'id' ) || $node->getAttribute( 'id' ) !== $part['id'])) return false;
         // compare classes
         if ($part['classes']) foreach ($part['classes'] as $class) if (!$this->_hasClass( $class, $node )) return false;
 
