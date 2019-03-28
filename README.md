@@ -27,39 +27,21 @@ Breakpoints in the package specify which image dimension is desired for which de
 
 ## Examples
 
+You find [example configuration](https://github.com/sebschlicht/plg_system_rimages/wiki/examples) which cover the following use cases:
+
+* compress all images (without any resizing) - see below
+* resize article images to match the *Bootstrap 3* device classes
+* having custom breakpoints (e.g. for smaller and tiny smartphones)
+* resize images of a specific extension (e.g. a slider)
+* provide different images on smaller devices - see below
+
 ### Compress all, resize non
 
 Having a global breakpoint package with the selector `img` tells the plugin to compress all images on your page.
 
-![Universal breakpoint package configuration screenshot](https://github.com/sebschlicht/plg_system_rimages/blob/master/images/screen_rimages_img.png)
+![Global breakpoint package](https://github.com/sebschlicht/plg_system_rimages/blob/master/images/rimages_cfg-ex_global.png)
 
 This simple step will most likely reduce your image transfer size by 20 to 50 percent.
-
-### Resize article images
-
-Even if you're using highly compressed images already, you may still benefit from this plugin:
-Consider you're using a couple of images in your articles.
-You've placed high-quality but at the same time large images for a nice visual experience on large screens.
-Particularly mobile devices with small screens and low bandwidth would benefit from resized images that are just large enough to fill their viewport width.
-
-Simply add a content breakpoint package with the selector `article img` and configure breakpoints for each device size that you'd like to treat separatedly.
-For example, you could add a breakpoint for each *Boootstrap 3* device class (extra-small, small, medium, large).
-
-Each breakpoint will lead to a resized version of the image and devices can select the smallest version that fills their viewport.
-These version will be generated automatically for you, by default.
-
-However, you're not limited to the *Bootstrap* classes, you can configure any breakpoint you like.
-For example, you could add another breakpoint at 360px to offer tiny images to older smartphones and similar devices.
-
-### Resize images of extensions (e.g. a slider)
-
-Having CSS selectors gives you a great deal of flexibility.
-You aren't limited to process all or just article images but you could also process images of an extension.
-
-Maybe you're using a slider (`<div id="slider" />`) which isn't using resized images.
-To make this slider use resized images, simply add a breakpoint package with the selector `#slider img` and configure breakpoints for smaller devices, e.g. using the *Bootstrap 3* device classes again.
-
-![Slider breakpoint package configuration screenshot](https://github.com/sebschlicht/plg_system_rimages/blob/master/images/screen_rimages_slider.png)
 
 ### Cropped version on small devices
 
