@@ -11,7 +11,7 @@
   <authorUrl>https://www.jablab.de</authorUrl>
 
   <updateservers>
-    <server type="extension" name="Responsive Images Plugin Updates">https://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
+    <server type="extension" name="RIMAGES (Responsive Images) Plugin">https://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
   </updateservers>
 
   <install> <!-- Runs on install -->
