@@ -8,10 +8,10 @@
   <copyright>Copyright (C) 2018 Sebastian Schlicht. All rights reserved.</copyright>
   <license>MIT License; see LICENSE</license>
   <authorEmail>sebastian@jablab.de</authorEmail>
-  <authorUrl>http://www.jablab.de</authorUrl>
+  <authorUrl>https://www.jablab.de</authorUrl>
 
   <updateservers>
-    <server type="extension" name="Responsive Images Plugin Updates">http://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
+    <server type="extension" name="Responsive Images Plugin Updates">https://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
   </updateservers>
 
   <install> <!-- Runs on install -->
