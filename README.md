@@ -27,13 +27,13 @@ Breakpoints in the package specify which image dimension is desired for which de
 
 ## Examples
 
-You find [example configuration](https://github.com/sebschlicht/plg_system_rimages/wiki/examples) which cover the following use cases:
+Our collection of [example configurations](https://github.com/sebschlicht/plg_system_rimages/wiki/examples) covers the following use cases:
 
-* compress all images (without any resizing) - see below
-* resize article images to match the *Bootstrap 3* device classes
-* having custom breakpoints (e.g. for smaller and tiny smartphones)
-* resize images of a specific extension (e.g. a slider)
+* compress all images (without resizing any) - see below
 * provide different images on smaller devices - see below
+* offer resized article images to each *Bootstrap 3* device class
+* having custom breakpoints (e.g. for a certain smartphone size)
+* resize images of a specific extension (e.g. a slider)
 
 ### Compress all, resize non
 
@@ -51,7 +51,7 @@ You can simply provide cropped versions of a particular image for defined breakp
 ## Installation
 
 Download the latest extension package and use the *Joomla!* extension manager to install it.
-The plugin is compatible with *Joomla!* 3.x.
+The plugin is compatible with *Joomla!* 3.x and can be updated via the extension manager.
 
 Use the *Joomla!* extension manager to uninstall the plugin and remove the configured image folder if you no longer need the responsive images.
 
