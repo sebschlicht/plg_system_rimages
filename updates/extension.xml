@@ -7,7 +7,7 @@
         <type>plugin</type>
         <folder>system</folder>
         <client>0</client>
-        <version>0.1.1</version>
+        <version>0.2.0</version>
         <infourl title="RIMAGES Changelog on GitHub">https://github.com/sebschlicht/plg_system_rimages</infourl>
         <downloads>
             <downloadurl type="full" format="zip">https://updates.jablab.de/joomla/plg_system_rimages/plg_system_rimages-0.1.0.zip</downloadurl>
