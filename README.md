@@ -2,9 +2,9 @@
 
 RIMAGES (*rimg*) is a *Joomla!* plugin to make the images on your website responsive.
 
-*rimg* can compress your images and display resized (i.e. smaller) images on smaller devices.
+*rimg* can compress your images and display resized images on mobile devices.
 Both compressed and resized images are generated automatically.
-Use CSS selectors to limit this process to specific images.
+CSS selectors can be used to limit this process to specific images.
 
 Using *rimg* helps to significantly decrease the page loading time and increase the Google *PageSpeed* rating, which contributes to the Google search ranking of your website.
 Thus *rimg* is a great addition to your Search Engine Optimization (SEO) toolbox.
@@ -27,13 +27,13 @@ Breakpoints in the package specify which image dimension is desired for which de
 
 ## Examples
 
-Our collection of [example configurations](https://github.com/sebschlicht/plg_system_rimages/wiki/examples) covers the following use cases:
+Our collection of [example configurations](https://github.com/sebschlicht/plg_system_rimages/wiki/examples) covers use cases such as:
 
-* compress all images (without resizing any) - see below
-* provide different images on smaller devices - see below
+* compress all images (without resizing) - see below
+* show alternative images on small devices - see below
 * offer resized article images to each *Bootstrap 3* device class
-* having custom breakpoints (e.g. for a certain smartphone size)
-* resize images of a specific extension (e.g. a slider)
+* use custom breakpoints (e.g. for a specific smartphone size)
+* resize images of a particular extension (e.g. a slider)
 
 ### Compress all, resize non
 
@@ -43,10 +43,13 @@ Having a global breakpoint package with the selector `img` tells the plugin to c
 
 This simple step will most likely reduce your image transfer size by 20 to 50 percent.
 
-### Cropped version on small devices
+### Alternative images on small devices
 
-In case one of your images has a clear focus on a particular object or subject, you may want to crop the image to the area of interest rather than downscaling the whole image.
-You can simply provide cropped versions of a particular image for defined breakpoint by following the plugin's [naming convention](https://github.com/sebschlicht/plg_system_rimages/wiki/naming-convention) and still have smaller versions of other images generated automatically, if you want.
+By default, the original image is downscaled for smaller devices.
+Though this is a great default, it may not be ideal for certain images.
+Your image may put a focus on a particular object or subject, in which case you might want to crop the image to the area of interest, or you might want to use completely different images on smaller (i.e. mobile) devices.
+
+Thus, you can provide alternative (e.g. cropped) originals for breakpoints (following the plugin's [naming convention](https://github.com/sebschlicht/plg_system_rimages/wiki/naming-convention)) which are then - instead of the original image - compressed and downscaled to be shown on devices with the respective dimensions.
 
 ## Installation
 
@@ -58,7 +61,7 @@ Use the *Joomla!* extension manager to uninstall the plugin and remove the confi
 ## Compatibility
 
 *rimg* is compatible with modern browsers and with caching.
-Incompatible browsers will neither benefit nor encounter issues.
-Please consider pitfalls for CSS directives and JavaScript code at the wiki page on [compatibility](https://github.com/sebschlicht/plg_system_rimages/wiki/Compatibility).
+Incompatible browsers will neither benefit nor suffer from issues.
+Please consider pitfalls for CSS directives and JavaScript at the wiki page on [compatibility](https://github.com/sebschlicht/plg_system_rimages/wiki/Compatibility).
 
 *ImageMagick* is required on your server to generate compressed and/or resized images automatically.
