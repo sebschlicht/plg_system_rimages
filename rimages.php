@@ -183,7 +183,7 @@ class PlgSystemRimages extends JPlugin
         if (!$src) return false;
 
         $doGenerateImages = $this->getPackageGenerateImages( $breakpointPackage );
-        $doDownloadExternalImages = $this->params->get( 'download_images', false );
+        $doDownloadExternalImages = $this->params->get( 'download_images', false ) && $this->params->get( 'download_images_inner', false );
         $doReplaceOriginalImage = $this->params->get( 'replace_original', true );
 
         // load local image
@@ -258,10 +258,12 @@ class PlgSystemRimages extends JPlugin
                 // load targeted viewport width
                 $viewportWidth = self::getBreakpointWidth( $breakpoint );
                 if (!$viewportWidth) continue;
-    
+
+                // load maximum image width, if set
+                $maxImageWidth = array_key_exists( 'imageWidth', $breakpoint ) ? $breakpoint['imageWidth'] : null;
+
                 // load the responsive image version (may create it)
-                $srcResponsive = $this->loadResponsiveImage( $orgFile, $replicaDir, $doGenerateImages, $viewportWidth,
-                    $breakpoint['imageWidth'] );
+                $srcResponsive = $this->loadResponsiveImage( $orgFile, $replicaDir, $doGenerateImages, $viewportWidth, $maxImageWidth );
                 if (!$srcResponsive) continue;
     
                 // build and add source tag
@@ -308,7 +310,7 @@ class PlgSystemRimages extends JPlugin
         // build path to respective responsive version
         $replicaSrc = substr( $replicaDir, strlen( JPATH_ROOT ) + 1 );
         $pathInfo = pathinfo( $orgFile );
-        $srcResponsive = "$replicaSrc/" . self::buildResponsiveImageFilename( $pathInfo, $viewportWidth );
+        $srcResponsive = "$replicaSrc/" . self::buildResponsiveImageFilename( $pathInfo, $viewportWidth, 'jpg' );
         JLog::add( 'Responsive image version (' . ($viewportWidth ? $viewportWidth : 'org') . "): $srcResponsive", JLog::DEBUG, 'rimages' );
 
         // generate if missing or regeneration requested
@@ -326,7 +328,18 @@ class PlgSystemRimages extends JPlugin
                 // generate responsive image version
                 try
                 {
-                    if (!self::generateImage( $orgFile, $srcResponsive, $imageWidth ))
+                    // load alternative image information
+                    $sourceFile = $orgFile;
+                    if ( $viewportWidth ) {
+                        // search for alternative original for viewport width
+                        $viewportSourceFile = $pathInfo['dirname'] . '/' . self::buildResponsiveImageFilename( $pathInfo, $viewportWidth );
+                        if ( is_file( $viewportSourceFile ) ) $sourceFile = $viewportSourceFile;
+
+                        // maximum image width (for resizing) defaults to maximum viewport width
+                        if ( $imageWidth === null ) $imageWidth = $viewportWidth;
+                    }
+
+                    if (!self::generateImage( $sourceFile, $srcResponsive, $imageWidth ))
                     {
                         JLog::add( "Failed to generate missing version '$srcResponsive'!", JLog::ERROR, 'rimages' );
                         return false;
@@ -439,11 +452,12 @@ class PlgSystemRimages extends JPlugin
      * 
      * @param array $pathInfo path info of the original image
      * @param int $width (optional) image width for a width suffix, leave out to refer to the original size
+     * @param string $extension (optional) image file extension, defaults to extension set in original path info
      * @return string file name for the responsive image version in the specified size
      */
-    private static function buildResponsiveImageFilename( &$pathInfo, $width = null )
+    private static function buildResponsiveImageFilename( &$pathInfo, $width = null, $extension = null )
     {
-        return $pathInfo['filename'] . ($width ? "_$width" : '') . '.jpg';
+        return $pathInfo['filename'] . ($width ? "_$width" : '') . '.' . ($extension ? $extension : $pathInfo['extension']);
     }
 
     /**

@@ -6,7 +6,6 @@ zip -q -9 -x "/.gitignore" \
     -x "/.idea/*" \
     -x "/mkzip.sh" \
     -x "/.mkzip.sh.swp" \
-    -x "/*.html" \
     -x "/*.md" \
     -x "/images/*" \
     -x "/updates/*" \

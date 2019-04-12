@@ -1,17 +1,17 @@
 <extension version="3.2" type="plugin" group="system" method="upgrade">
   <name>PLG_SYSTEM_RIMAGES</name>
   <description>PLG_SYSTEM_RIMAGES_XML_DESCRIPTION</description>
-  <version>0.0.5</version>
+  <version>0.2.0</version>
 
   <author>Sebastian Schlicht</author>
   <creationDate>Jun 2018</creationDate>
   <copyright>Copyright (C) 2018 Sebastian Schlicht. All rights reserved.</copyright>
   <license>MIT License; see LICENSE</license>
   <authorEmail>sebastian@jablab.de</authorEmail>
-  <authorUrl>http://www.jablab.de</authorUrl>
+  <authorUrl>https://www.jablab.de</authorUrl>
 
   <updateservers>
-    <server type="extension" name="Responsive Images Plugin Updates">http://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
+    <server type="extension" name="RIMAGES (Responsive Images) Plugin">https://updates.jablab.de/joomla/plg_system_rimages/extension.xml</server>
   </updateservers>
 
   <install> <!-- Runs on install -->
@@ -74,6 +74,9 @@
           <option value="1">JYES</option>
           <option value="0">JNO</option>
         </field>
+        <field type="checkbox" name="download_images_inner"
+          label="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_CONFIRM_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_DOWNLOAD_IMAGES_CONFIRM_DESC"
+          showon="generate_images:1[AND]download_images:1" default="0"/>
         <field type="number" name="cache_images"
           label="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_LABEL" description="PLG_SYSTEM_RIMAGES_CFG_CACHE_IMAGES_DESC"
           showon="generate_images:1[AND]download_images:1" default="1440"/>

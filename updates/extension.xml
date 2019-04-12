@@ -1,16 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <updates>
     <update>
-        <name>RIMAGES Plugin</name>
-        <version>0.0.1</version>
-        <downloads>
-            <downloadurl type="full" format="zip">https://updates.jablab.de/joomla/plg_system_rimages/plg_system_rimages.zip</downloadurl>
-        </downloads>
-        <targetplatform name="joomla" version="3.[012345678]"/>
+        <name>RIMAGES (Responsive Images) Plugin</name>
+        <description>System Plugin for Responsive Images</description>
         <element>rimages</element>
-        <description/>
         <type>plugin</type>
         <folder>system</folder>
-        <maintainer>JabLab</maintainer>
-        <maintainerurl>https://www.jablab.de</maintainerurl>
+        <client>0</client>
+        <version>0.2.0</version>
+        <infourl title="RIMAGES Changelog on GitHub">https://github.com/sebschlicht/plg_system_rimages</infourl>
+        <downloads>
+            <downloadurl type="full" format="zip">https://updates.jablab.de/joomla/plg_system_rimages/plg_system_rimages-0.1.0.zip</downloadurl>
+        </downloads>
+        <maintainer>Sebastian Schlicht</maintainer>
+        <maintainerurl>https://github.com/sebschlicht/plg_system_rimages</maintainerurl>
+        <targetplatform name="joomla" version="3.*"/>
     </update>
 </updates>
